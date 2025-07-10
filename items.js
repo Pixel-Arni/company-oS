@@ -237,7 +237,7 @@ function addItem() {
     console.log('📦 Füge neues Item hinzu...');
     
     const nameField = document.getElementById('newItemName');
-    const priceField = document.getElementById('newItemPrice');
+    const priceField = document.getElementById('newItemSellPrice');
     
     if (!nameField || !priceField) {
         console.error('❌ Item-Eingabefelder nicht gefunden');
@@ -300,7 +300,7 @@ function validateItemInput(name, price) {
     
     if (isNaN(price) || price < 0) {
         showNotification('Bitte geben Sie einen gültigen Verkaufspreis ein!', 'warning');
-        document.getElementById('newItemPrice').focus();
+        document.getElementById('newItemSellPrice').focus();
         return false;
     }
     
@@ -329,7 +329,7 @@ function editItem(id) {
     
     // Modal-Felder füllen
     const nameField = document.getElementById('editItemName');
-    const priceField = document.getElementById('editItemPrice');
+    const priceField = document.getElementById('editItemSellPrice');
     
     if (nameField && priceField) {
         nameField.value = item.name;
@@ -449,7 +449,7 @@ function saveItemEdit() {
     }
     
     const nameField = document.getElementById('editItemName');
-    const priceField = document.getElementById('editItemPrice');
+    const priceField = document.getElementById('editItemSellPrice');
     
     if (!nameField || !priceField) {
         console.error('❌ Bearbeitungsfelder nicht gefunden');
@@ -493,7 +493,7 @@ function closeEditModal() {
     
     // Felder leeren
     const nameField = document.getElementById('editItemName');
-    const priceField = document.getElementById('editItemPrice');
+    const priceField = document.getElementById('editItemSellPrice');
     if (nameField) nameField.value = '';
     if (priceField) priceField.value = '';
     
