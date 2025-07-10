@@ -327,13 +327,15 @@ function deleteCustomer(id) {
     let hasBookings = false;
     let hasSales = false;
     
-    // TODO: Prüfung für zeitliche Buchungen und Verkäufe implementieren
-    // if (timeBookings && timeBookings.some(booking => booking.customerId == id)) {
-    //     hasBookings = true;
-    // }
-    // if (sales && sales.some(sale => sale.customerId == id)) {
-    //     hasSales = true;
-    // }
+    // Prüfe, ob dieser Kunde Buchungen oder Verkäufe hat
+    if (Array.isArray(timeBookings) &&
+        timeBookings.some(booking => booking.customerId == id)) {
+        hasBookings = true;
+    }
+    if (Array.isArray(sales) &&
+        sales.some(sale => sale.customerId == id)) {
+        hasSales = true;
+    }
     
     let confirmMessage = `Kunde "${customer.firstName} ${customer.lastName}" wirklich löschen?`;
     if (hasBookings || hasSales) {
@@ -345,9 +347,19 @@ function deleteCustomer(id) {
     }
     
     if (confirm(confirmMessage)) {
-        // TODO: Zugehörige Daten löschen wenn andere Module implementiert sind
-        // timeBookings = timeBookings.filter(booking => booking.customerId != id);
-        // sales = sales.filter(sale => sale.customerId != id);
+        // Zugehörige Daten in anderen Modulen löschen
+        if (hasBookings && Array.isArray(timeBookings)) {
+            timeBookings = timeBookings.filter(booking => booking.customerId != id);
+            if (typeof saveTimeBookingData === 'function') {
+                saveTimeBookingData();
+            }
+        }
+        if (hasSales && Array.isArray(sales)) {
+            sales = sales.filter(sale => sale.customerId != id);
+            if (typeof saveSalesData === 'function') {
+                saveSalesData();
+            }
+        }
         
         // Kunde löschen
         customers = customers.filter(cust => cust.id != id);
@@ -380,17 +392,40 @@ function updateDiscountFromType(customerType, targetFieldId) {
  * Berechnet Statistiken für einen Kunden
  */
 function calculateCustomerStats(customerId) {
-    // TODO: Implementierung wenn zeitliche Buchungen und Verkäufe verfügbar sind
-    // const customerBookings = timeBookings.filter(booking => booking.customerId == customerId);
-    // const customerSales = sales.filter(sale => sale.customerId == customerId);
-    
+    const customerBookings = Array.isArray(timeBookings)
+        ? timeBookings.filter(booking => booking.customerId == customerId)
+        : [];
+    const customerSales = Array.isArray(sales)
+        ? sales.filter(sale => sale.customerId == customerId)
+        : [];
+
+    const bookingSpent = customerBookings.reduce((sum, b) => sum + (b.finalPrice || 0), 0);
+    const salesSpent = customerSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
+    const totalSpent = bookingSpent + salesSpent;
+
+    const lastBookingDate = customerBookings.reduce((latest, b) => {
+        return (!latest || new Date(b.date) > new Date(latest)) ? b.date : latest;
+    }, null);
+    const lastSaleDate = customerSales.reduce((latest, s) => {
+        return (!latest || new Date(s.date) > new Date(latest)) ? s.date : latest;
+    }, null);
+
+    let lastVisit = null;
+    if (lastBookingDate && lastSaleDate) {
+        lastVisit = new Date(lastBookingDate) > new Date(lastSaleDate) ? lastBookingDate : lastSaleDate;
+    } else {
+        lastVisit = lastBookingDate || lastSaleDate;
+    }
+
+    const totalVisits = customerBookings.length + customerSales.length;
+
     return {
-        totalVisits: 0, // customer.totalVisits
-        totalSpent: 0, // customer.totalSpent
-        totalBookings: 0, // customerBookings.length
-        totalSales: 0, // customerSales.length
-        lastVisit: null, // customer.lastVisit
-        averageSpending: 0
+        totalVisits,
+        totalSpent: Number(totalSpent.toFixed(2)),
+        totalBookings: customerBookings.length,
+        totalSales: customerSales.length,
+        lastVisit,
+        averageSpending: totalVisits > 0 ? Number((totalSpent / totalVisits).toFixed(2)) : 0
     };
 }
 
@@ -400,25 +435,30 @@ function calculateCustomerStats(customerId) {
 function calculateWeeklyCustomerRevenue(customerId, weekStart) {
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 7);
-    
-    // TODO: Implementierung wenn zeitliche Buchungen und Verkäufe verfügbar sind
-    // const weeklyBookings = timeBookings.filter(booking => 
-    //     booking.customerId == customerId &&
-    //     new Date(booking.date) >= weekStart &&
-    //     new Date(booking.date) < weekEnd
-    // );
-    
-    // const weeklySales = sales.filter(sale =>
-    //     sale.customerId == customerId &&
-    //     new Date(sale.date) >= weekStart &&
-    //     new Date(sale.date) < weekEnd
-    // );
-    
+
+    const weeklyBookings = Array.isArray(timeBookings)
+        ? timeBookings.filter(booking =>
+            booking.customerId == customerId &&
+            new Date(booking.date) >= weekStart &&
+            new Date(booking.date) < weekEnd)
+        : [];
+
+    const weeklySales = Array.isArray(sales)
+        ? sales.filter(sale =>
+            sale.customerId == customerId &&
+            new Date(sale.date) >= weekStart &&
+            new Date(sale.date) < weekEnd)
+        : [];
+
+    const bookingRevenue = weeklyBookings.reduce((sum, b) => sum + (b.finalPrice || 0), 0);
+    const salesRevenue = weeklySales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
+    const totalRevenue = bookingRevenue + salesRevenue;
+
     return {
-        bookingRevenue: 0,
-        salesRevenue: 0,
-        totalRevenue: 0,
-        visits: 0
+        bookingRevenue: Number(bookingRevenue.toFixed(2)),
+        salesRevenue: Number(salesRevenue.toFixed(2)),
+        totalRevenue: Number(totalRevenue.toFixed(2)),
+        visits: weeklyBookings.length + weeklySales.length
     };
 }
 
@@ -430,9 +470,15 @@ function calculateOverallCustomerStats() {
     const activeCustomers = customers.filter(cust => cust.isActive).length;
     const vipCustomers = customers.filter(cust => cust.customerType === 'VIP' || cust.customerType === 'Premium').length;
     
-    // TODO: Erweitere mit echten Daten aus Buchungen und Verkäufen
-    const totalRevenue = customers.reduce((sum, customer) => sum + (customer.totalSpent || 0), 0);
-    const totalVisits = customers.reduce((sum, customer) => sum + (customer.totalVisits || 0), 0);
+    const bookingRevenue = Array.isArray(timeBookings)
+        ? timeBookings.reduce((sum, b) => sum + (b.finalPrice || 0), 0)
+        : 0;
+    const salesRevenue = Array.isArray(sales)
+        ? sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0)
+        : 0;
+    const totalRevenue = bookingRevenue + salesRevenue;
+    const totalVisits = (Array.isArray(timeBookings) ? timeBookings.length : 0) +
+        (Array.isArray(sales) ? sales.length : 0);
     
     return {
         totalCustomers,
