@@ -494,17 +494,6 @@ function updateMaterialDropdowns() {
     });
 }
 
-// ===================================================================
-// PLACEHOLDER EDIT FUNCTIONS
-// ===================================================================
-
-function editItem(id) { showNotification('Edit-Funktion wird implementiert...', 'warning'); }
-function editMaterial(id) { showNotification('Edit-Funktion wird implementiert...', 'warning'); }
-function editEmployee(id) { showNotification('Edit-Funktion wird implementiert...', 'warning'); }
-function editCustomer(id) { showNotification('Edit-Funktion wird implementiert...', 'warning'); }
-function editSale(id) { showNotification('Edit-Funktion wird implementiert...', 'warning'); }
-function editPurchase(id) { showNotification('Edit-Funktion wird implementiert...', 'warning'); }
-function editTimeBooking(id) { showNotification('Edit-Funktion wird implementiert...', 'warning'); }
 
 // ===================================================================
 // UPDATE FUNCTIONS FOR OTHER MODULES
@@ -669,59 +658,3 @@ if (document.readyState === 'loading') {
 }
 
 console.log('🎨 UI.js geladen');
-
-// Ersetzen Sie die Platzhalter-Funktionen durch diese Implementierungen:
-function addItem() {
-    const name = document.getElementById('itemName').value;
-    const quantity = parseInt(document.getElementById('itemQuantity').value) || 0;
-    const price = parseFloat(document.getElementById('itemPrice').value) || 0;
-    
-    if (!name) {
-        showNotification('Bitte geben Sie einen Namen ein', 'error');
-        return;
-    }
-    
-    const newItem = {
-        id: Date.now().toString(),
-        name: name,
-        quantity: quantity,
-        price: price,
-        createdAt: new Date().toISOString()
-    };
-    
-    if (!window.items) window.items = [];
-    items.push(newItem);
-    
-    if (typeof saveData === 'function') saveData();
-    updateItemsDisplay();
-    closeModal('itemModal');
-    showNotification('Item erfolgreich hinzugefügt', 'success');
-}
-
-function addMaterial() {
-    const name = document.getElementById('materialName').value;
-    const stock = parseInt(document.getElementById('materialStock').value) || 0;
-    const cost = parseFloat(document.getElementById('materialCost').value) || 0;
-    
-    if (!name) {
-        showNotification('Bitte geben Sie einen Namen ein', 'error');
-        return;
-    }
-    
-    const newMaterial = {
-        id: Date.now().toString(),
-        name: name,
-        stock: stock,
-        cost: cost,
-        minStock: 10, // Default-Wert
-        createdAt: new Date().toISOString()
-    };
-    
-    if (!window.materials) window.materials = [];
-    materials.push(newMaterial);
-    
-    if (typeof saveData === 'function') saveData();
-    updateMaterialsDisplay();
-    closeModal('materialModal');
-    showNotification('Material erfolgreich hinzugefügt', 'success');
-}
