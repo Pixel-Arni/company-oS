@@ -437,6 +437,103 @@ select.input-field option {
 }
 
 /* ===================================================================
+   BILANZ CONTROLS
+   ================================================================= */
+.bilanz-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+/* ===================================================================
+   SALES & PURCHASES SELECTION ROWS
+   ================================================================= */
+.item-selection-row,
+.material-selection-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.item-info,
+.material-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.item-name,
+.material-name {
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.item-price,
+.material-current-price {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.item-profit {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.item-quantity,
+.material-quantity {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.qty-btn {
+    background: var(--accent-primary);
+    border: none;
+    color: var(--primary-bg);
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.qty-input,
+.price-input {
+    width: 60px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    padding: 4px;
+}
+
+.price-input {
+    text-align: right;
+    width: 80px;
+}
+
+.item-total,
+.material-total {
+    min-width: 80px;
+    text-align: right;
+    font-weight: bold;
+}
+
+.material-price {
+    text-align: right;
+    color: var(--text-primary);
+}
+
+/* ===================================================================
    HIER FOLGEN IHRE MODAL-STYLES...
    ================================================================= */
 /* ALLE MODALS SOFORT VERSTECKEN */
