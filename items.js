@@ -7,6 +7,68 @@
 let editingItemId = null;
 let editingMaterialId = null;
 
+// Helper to create a material selection row
+function createMaterialRow(listId, materialId = '', quantity = '') {
+    const list = document.getElementById(listId);
+    if (!list) return;
+
+    const row = document.createElement('div');
+    row.className = 'material-row';
+
+    const select = document.createElement('select');
+    select.className = 'material-select';
+    select.innerHTML = '<option value="">Material wählen...</option>';
+    materials.forEach(mat => {
+        const option = document.createElement('option');
+        option.value = mat.id;
+        option.textContent = `${mat.name} (${formatCurrency(mat.price)})`;
+        select.appendChild(option);
+    });
+    select.value = materialId;
+
+    const qtyInput = document.createElement('input');
+    qtyInput.type = 'number';
+    qtyInput.className = 'quantity-input';
+    qtyInput.min = '0';
+    qtyInput.step = '0.01';
+    qtyInput.value = quantity || '';
+
+    row.appendChild(select);
+    row.appendChild(qtyInput);
+
+    list.appendChild(row);
+}
+
+function getMaterialRowsData(listId) {
+    const list = document.getElementById(listId);
+    if (!list) return [];
+
+    const rows = list.querySelectorAll('.material-row');
+    const data = [];
+    rows.forEach(row => {
+        const select = row.querySelector('select');
+        const input = row.querySelector('input');
+        const materialId = select ? select.value : '';
+        const qty = parseFloat(input ? input.value : '');
+        if (materialId && !isNaN(qty) && qty > 0) {
+            data.push({
+                materialId: materialId,
+                quantity: qty,
+                assignedAt: new Date().toISOString()
+            });
+        }
+    });
+    return data;
+}
+
+function addMaterialToItem() {
+    createMaterialRow('itemMaterialList');
+}
+
+function addMaterialToEditItem() {
+    createMaterialRow('editItemMaterialList');
+}
+
 // ===================================================================
 // MATERIAL MANAGEMENT
 // ===================================================================
@@ -264,7 +326,7 @@ function addItem() {
         id: generateId(),
         name: name,
         sellPrice: price,
-        materials: [],
+        materials: getMaterialRowsData('itemMaterialList'),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     };
@@ -273,10 +335,12 @@ function addItem() {
     items.push(item);
     saveData();
     updateDisplay();
-    
+
     // Eingabefelder leeren
     nameField.value = '';
     priceField.value = '';
+    const matList = document.getElementById('itemMaterialList');
+    if (matList) matList.innerHTML = '';
     nameField.focus();
     
     showNotification(`Item "${name}" wurde hinzugefügt!`, 'success');
@@ -347,45 +411,21 @@ function editItem(id) {
  * Aktualisiert die Material-Zuweisungen im Modal
  */
 function updateMaterialAssignments(item) {
-    const container = document.getElementById('materialAssignments');
+    const container = document.getElementById('editItemMaterialList');
     if (!container) {
         console.error('❌ Material-Assignments Container nicht gefunden');
         return;
     }
-    
-    if (materials.length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; color: var(--text-muted); padding: 20px;">
-                <p>Keine Materialien verfügbar.</p>
-                <p>Fügen Sie zuerst Materialien hinzu, um sie Items zuweisen zu können.</p>
-            </div>
-        `;
-        return;
-    }
-    
+
     container.innerHTML = '';
-    
-    materials.forEach(material => {
-        const existingMaterial = item.materials ? item.materials.find(m => m.materialId == material.id) : null;
-        const quantity = existingMaterial ? existingMaterial.quantity : 0;
-        
-        const div = document.createElement('div');
-        div.className = 'material-assignment';
-        div.innerHTML = `
-            <span>${escapeHtml(material.name)} (${formatCurrency(material.price)})</span>
-            <input 
-                type="number" 
-                class="quantity-input" 
-                value="${quantity}" 
-                min="0" 
-                max="9999"
-                step="0.01" 
-                onchange="updateMaterialQuantity('${material.id}', this.value)"
-                placeholder="Menge"
-            >
-        `;
-        container.appendChild(div);
-    });
+
+    if (!item.materials || item.materials.length === 0) {
+        createMaterialRow('editItemMaterialList');
+    } else {
+        item.materials.forEach(mat => {
+            createMaterialRow('editItemMaterialList', mat.materialId, mat.quantity);
+        });
+    }
 }
 
 /**
@@ -474,6 +514,7 @@ function saveItemEdit() {
     const oldName = item.name;
     item.name = name;
     item.sellPrice = price;
+    item.materials = getMaterialRowsData('editItemMaterialList');
     item.updatedAt = new Date().toISOString();
     
     saveData();
@@ -498,8 +539,12 @@ function closeEditModal() {
     if (priceField) priceField.value = '';
     
     // Material-Assignments leeren
-    const container = document.getElementById('materialAssignments');
+    const container = document.getElementById('editItemMaterialList');
     if (container) container.innerHTML = '';
+}
+
+function closeItemEditModal() {
+    closeEditModal();
 }
 
 /**
