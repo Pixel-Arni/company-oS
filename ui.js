@@ -172,6 +172,9 @@ function updateTabDisplays(tabName) {
         case 'bilanz':
             updateBilanzDisplay();
             break;
+        case 'calculator':
+            updateCalculatorDisplay();
+            break;
         default:
             updateDisplay();
     }
@@ -189,31 +192,82 @@ function updateDisplay() {
     updateSalesDisplay();
     updatePurchasesDisplay();
     updateTimeBookingsDisplay();
+    updateCalculatorDisplay();
     updateAllDropdowns();
 }
 
 function updateItemsDisplay() {
     const container = document.getElementById('items-list');
     if (!container || !window.items) return;
-    
+
     if (items.length === 0) {
         container.innerHTML = createEmptyState('Keine Items vorhanden', 'Fügen Sie Ihr erstes Item hinzu!');
         return;
     }
-    
-    container.innerHTML = items.map(item => createListItem(
-        item.name,
-        [
-            `Menge: ${item.quantity}`,
-            `Preis: ${formatCurrency(item.price)}`,
-            `Kategorie: ${item.category || 'Keine'}`,
-            item.description || ''
-        ].filter(Boolean),
-        [
-            { text: '✏️ Bearbeiten', onclick: `editItem('${item.id}')`, class: 'btn' },
-            { text: '🗑️ Löschen', onclick: `deleteItem('${item.id}')`, class: 'btn btn-danger' }
-        ]
-    )).join('');
+
+    container.innerHTML = items.map(item => {
+        const calc = calculateCosts(item);
+        return createListItem(
+            item.name,
+            [
+                `VK: ${formatCurrency(item.sellPrice)}`,
+                `Materialkosten: ${formatCurrency(calc.materialCosts)}`,
+                `Gewinn: ${formatCurrency(calc.profit)} (${calc.profitMargin.toFixed(1)}%)`
+            ],
+            [
+                { text: '✏️ Bearbeiten', onclick: `editItem('${item.id}')`, class: 'btn' },
+                { text: '🗑️ Löschen', onclick: `deleteItem('${item.id}')`, class: 'btn btn-danger' }
+            ]
+        );
+    }).join('');
+}
+
+function updateCalculatorDisplay() {
+    const container = document.getElementById('calculator-content');
+    if (!container || !window.items) return;
+
+    if (items.length === 0) {
+        container.innerHTML = createEmptyState('Keine Items vorhanden', 'Fügen Sie zunächst Items und Materialien hinzu!');
+        return;
+    }
+
+    const rows = items.map(item => {
+        const calc = calculateCosts(item);
+        return `
+            <tr>
+                <td>${escapeHtml(item.name)}</td>
+                <td>${formatCurrency(item.sellPrice)}</td>
+                <td>${formatCurrency(calc.materialCosts)}</td>
+                <td>${formatCurrency(calc.profit)}</td>
+                <td>${calc.profitMargin.toFixed(1)}%</td>
+            </tr>
+        `;
+    }).join('');
+
+    const stats = calculateOverallStats();
+
+    container.innerHTML = `
+        <table class="calculator-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>VK</th>
+                    <th>Material</th>
+                    <th>Gewinn</th>
+                    <th>Marge</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+            <tfoot>
+                <tr>
+                    <td><strong>Summe</strong></td>
+                    <td>${formatCurrency(stats.totalRevenue)}</td>
+                    <td>${formatCurrency(stats.totalCosts)}</td>
+                    <td>${formatCurrency(stats.totalProfit)}</td>
+                    <td>${stats.averageMargin.toFixed(1)}%</td>
+                </tr>
+            </tfoot>
+        </table>`;
 }
 
 function updateMaterialsDisplay() {

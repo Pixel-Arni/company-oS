@@ -1706,3 +1706,20 @@ select.input-field option {
 }
 
 /* Ende der Modal Styles */
+
+/* Calculator table */
+.calculator-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.calculator-table th,
+.calculator-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.calculator-table tfoot td {
+    font-weight: bold;
+}
