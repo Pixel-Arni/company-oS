@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Company OS - Erweitert</title>
     <link rel="stylesheet" href="styles.css">
-    
     <!-- JavaScript Dateien wurden ans Ende der Datei verschoben -->
 </head>
 <body>
@@ -903,7 +902,6 @@
         </div>
     </div>
 
-    <!-- JavaScript Dateien - KOMPLETT ERWEITERT -->
     <script src="database.js"></script>
     <script src="themes.js"></script>
     <script src="items.js"></script>
@@ -913,9 +911,10 @@
     <script src="sales.js"></script>
     <script src="materialPurchases.js"></script>
     <script src="bilanz.js"></script>
+    <script src="renderTemplates.js"></script>
     <script src="ui.js"></script>
-
-    <!-- Inline JavaScript für erweiterte Funktionalität -->
+    
+    <!-- INLINE-JS wie gehabt -->
     <script>
         // Clear Import Text Funktion
         function clearImportText() {
@@ -927,54 +926,42 @@
                 }
             }
         }
-
         // Mobile-spezifische Event Listener
         document.addEventListener('DOMContentLoaded', function() {
-            // Touch-Events für bessere Mobile-Erfahrung
             let touchStartY = 0;
             let touchEndY = 0;
-            
             document.addEventListener('touchstart', function(e) {
                 touchStartY = e.changedTouches[0].screenY;
             });
-            
             document.addEventListener('touchend', function(e) {
                 touchEndY = e.changedTouches[0].screenY;
                 handleSwipe();
             });
-            
             function handleSwipe() {
                 const swipeThreshold = 50;
                 const diff = touchStartY - touchEndY;
-                
                 if (Math.abs(diff) > swipeThreshold) {
-                    // Swipe up/down detected - könnte für Navigation genutzt werden
-                    // Implementierung kann hier erweitert werden
+                    // Swipe up/down detected
                 }
             }
-            
             // Keyboard shortcuts für Desktop
             document.addEventListener('keydown', function(e) {
-                // Alt + Nummer für Tab-Wechsel
                 if (e.altKey && !isNaN(e.key)) {
                     e.preventDefault();
                     const tabNumber = parseInt(e.key);
                     const tabMapping = {
                         1: 'calculator',
-                        2: 'time-bookings', 
+                        2: 'time-bookings',
                         3: 'sales-daily',
                         4: 'material-purchases',
                         5: 'bilanz-daily',
                         6: 'employees-overview',
                         7: 'settings'
                     };
-                    
                     if (tabMapping[tabNumber] && typeof showTab === 'function') {
                         showTab(tabMapping[tabNumber]);
                     }
                 }
-                
-                // F1 für Hilfe (könnte erweitert werden)
                 if (e.key === 'F1') {
                     e.preventDefault();
                     if (typeof showNotification === 'function') {
@@ -982,11 +969,9 @@
                     }
                 }
             });
-            
-            // Auto-save bei Eingaben (Debounced)
+            // Auto-save bei Eingaben
             let autoSaveTimeout;
             const autoSaveInputs = document.querySelectorAll('.input-field');
-            
             autoSaveInputs.forEach(input => {
                 input.addEventListener('input', function() {
                     clearTimeout(autoSaveTimeout);
@@ -994,84 +979,58 @@
                         if (typeof saveData === 'function') {
                             saveData();
                         }
-                    }, 5000); // Auto-save nach 5 Sekunden Inaktivität
+                    }, 5000);
                 });
             });
-            
-            // Offline-Erkennung
             window.addEventListener('online', function() {
                 if (typeof showNotification === 'function') {
                     showNotification('✅ Internetverbindung wiederhergestellt!', 'success');
                 }
             });
-            
             window.addEventListener('offline', function() {
                 if (typeof showNotification === 'function') {
                     showNotification('⚠️ Keine Internetverbindung - Arbeite im Offline-Modus', 'warning');
                 }
             });
-            
-            // Performance-Monitoring (einfach)
             setTimeout(() => {
                 const loadTime = performance.now();
                 console.log(`🚀 Company OS geladen in ${Math.round(loadTime)}ms`);
-                
                 if (loadTime > 3000 && typeof showNotification === 'function') {
                     showNotification('⚠️ Längere Ladezeit erkannt - Prüfen Sie Ihre Internetverbindung', 'warning');
                 }
             }, 100);
-            
-            // Tab-Visibilität für Auto-Save
             document.addEventListener('visibilitychange', function() {
                 if (document.hidden && typeof saveData === 'function') {
-                    // Speichere automatisch wenn Tab verlassen wird
                     saveData();
                 }
             });
-            
-            // Window-Before-Unload für Datenschutz
             window.addEventListener('beforeunload', function(e) {
                 if (typeof saveData === 'function') {
                     saveData();
                 }
-                // Optional: Warnung bei ungespeicherten Änderungen
-                // e.preventDefault();
-                // return 'Möchten Sie wirklich die Seite verlassen? Ungespeicherte Änderungen gehen verloren.';
             });
-            
             console.log('🎉 Company OS - Erweiterte Event Listener initialisiert');
         });
-
-        // Service Worker für PWA (Progressive Web App) - Optional
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-                // Service Worker könnte hier registriert werden für Offline-Funktionalität
                 console.log('🔧 Service Worker Support verfügbar');
             });
         }
-
-        // Globale Error Handler
         window.addEventListener('error', function(e) {
             console.error('❌ Globaler Fehler:', e.error);
             if (typeof showNotification === 'function') {
                 showNotification('⚠️ Ein Fehler ist aufgetreten - Daten wurden gesichert', 'error');
             }
-            
-            // Auto-save bei Fehlern
             if (typeof saveData === 'function') {
                 saveData();
             }
         });
-
-        // Unhandled Promise Rejections
         window.addEventListener('unhandledrejection', function(e) {
             console.error('❌ Unbehandelte Promise Rejection:', e.reason);
             if (typeof showNotification === 'function') {
                 showNotification('⚠️ Ein asynchroner Fehler ist aufgetreten', 'warning');
             }
         });
-
-        // Debug-Funktionen für Entwicklung
         window.CompanyOS = {
             version: '3.0',
             modules: ['database', 'themes', 'items', 'employees', 'customers', 'timeBookings', 'sales', 'materialPurchases', 'bilanz', 'ui'],
@@ -1108,12 +1067,9 @@
                 }
             }
         };
-
-        // Initialisierungs-Check
         setTimeout(() => {
             const requiredFunctions = ['showTab', 'saveData', 'updateDisplay'];
             const missingFunctions = requiredFunctions.filter(fn => typeof window[fn] !== 'function');
-            
             if (missingFunctions.length > 0) {
                 console.warn('⚠️ Fehlende Funktionen:', missingFunctions);
             } else {
@@ -1121,9 +1077,7 @@
             }
         }, 2000);
     </script>
-
     <!-- Meta-Tags für PWA (Progressive Web App) - Optional -->
-    <!-- Diese könnten in den <head> Bereich verschoben werden -->
     <script>
         // Dynamisches PWA Manifest
         const manifest = {
@@ -1142,20 +1096,15 @@
                 }
             ]
         };
-        
-        // PWA Support prüfen und Manifest hinzufügen
         if ('serviceWorker' in navigator) {
             const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
             const manifestURL = URL.createObjectURL(manifestBlob);
-            
             const link = document.createElement('link');
             link.rel = 'manifest';
             link.href = manifestURL;
             document.head.appendChild(link);
-            
             console.log('📱 PWA Manifest hinzugefügt');
         }
     </script>
-
 </body>
 </html>

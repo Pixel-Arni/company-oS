@@ -78,7 +78,6 @@ body {
     font-size: 0.9rem;
 }
 
-/* Sidebar Navigation */
 .sidebar-nav {
     list-style: none;
 }
@@ -125,7 +124,6 @@ body {
     margin-left: 12px;
 }
 
-/* Dropdown Styles */
 .dropdown {
     list-style: none;
     margin-left: 20px;
@@ -160,7 +158,6 @@ body {
     color: var(--primary-bg);
 }
 
-/* Mobile Toggle */
 .mobile-toggle {
     display: none;
     position: fixed;
@@ -334,23 +331,112 @@ select.input-field option {
     .sidebar {
         transform: translateX(-100%);
     }
-    
+
     .sidebar.mobile-open {
         transform: translateX(0);
     }
-    
+
     .mobile-toggle {
         display: block;
     }
-    
+
     .main-content {
         margin-left: 0;
         padding: 70px 20px 20px 20px;
     }
-    
+
     .input-group {
         grid-template-columns: 1fr;
     }
+}
+
+
+/* ===================================================================
+   MODAL FIX - KOMPLETT UND KORREKT!
+   ================================================================= */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal.show {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-content {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 600px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    cursor: default;
+    position: relative;
+}
+
+.modal.opening .modal-content {
+    animation: modalContentSlideIn 0.3s ease-out forwards;
+}
+
+.modal.closing .modal-content {
+    animation: modalContentSlideOut 0.3s ease-in forwards;
+}
+
+@keyframes modalContentSlideIn {
+    from { transform: scale(0.7) translateY(-50px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes modalContentSlideOut {
+    from { transform: scale(1) translateY(0); opacity: 1; }
+    to { transform: scale(0.7) translateY(-50px); opacity: 0; }
+}
+
+.modal .btn {
+    background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+    border: none;
+    border-radius: 10px;
+    color: var(--primary-bg);
+    padding: 12px 24px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+.modal .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+}
+
+/* Problematisches !important entfernt */
+.modal {
+    display: none;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.modal.show {
+    display: flex;
+    opacity: 1;
 }
 
 /* ===================================================================
@@ -360,13 +446,6 @@ select.input-field option {
     text-align: center;
     padding: 60px 20px;
     color: var(--text-secondary);
-}
-
-.empty-state svg {
-    width: 64px;
-    height: 64px;
-    margin-bottom: 20px;
-    opacity: 0.5;
 }
 
 .list-item {
@@ -405,7 +484,6 @@ select.input-field option {
     font-weight: bold;
 }
 
-/* Stats Header */
 .stats-header {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -437,1175 +515,5 @@ select.input-field option {
 }
 
 /* ===================================================================
-   HIER FOLGEN IHRE MODAL-STYLES...
+   ENDE - ALLE STYLES KOMPLETT UND KORREKT
    ================================================================= */
-/* ALLE MODALS SOFORT VERSTECKEN */
-#itemModal,
-#materialModal,
-#customerModal,
-#editCustomerModal,
-#activityModal,
-#editActivityModal,
-#editTimeBookingModal,
-#employeeModal,
-#editEmployeeModal,
-#editItemModal,
-#editMaterialModal,
-#editSaleModal,
-#editPurchaseModal,
-.modal {
-    display: none !important;
-}
-
-/* Nur sichtbar wenn JavaScript es öffnet */
-.modal[style*="display: block"],
-.modal.show {
-    display: flex !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    background: rgba(0, 0, 0, 0.8) !important;
-    z-index: 10000 !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* Modal Content Basis-Styling */
-.modal-content {
-    background: var(--card-bg) !important;
-    border-radius: 15px !important;
-    padding: 20px !important;
-    max-width: 90% !important;
-    max-height: 90% !important;
-    overflow-y: auto !important;
-    border: 1px solid var(--border-color) !important;
-}
-
-/* Basis Modal Styles - WICHTIG: Alle Modals standardmäßig verstecken */
-.modal {
-    display: none !important; /* KRITISCH: Alle Modals verstecken */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(5px);
-    z-index: 10000;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: all 0.3s ease;
-    cursor: pointer; /* Click außerhalb zum Schließen */
-}
-
-/* Modal wird sichtbar wenn JavaScript es öffnet */
-.modal.show,
-.modal[style*="display: block"] {
-    display: flex !important;
-    opacity: 1;
-}
-
-/* Modal Content - Der eigentliche Dialog */
-.modal-content {
-    background: var(--card-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 30px;
-    max-width: 600px;
-    width: 95%;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    transform: scale(0.9);
-    transition: transform 0.3s ease;
-    cursor: default; /* Verhindert Schließen bei Click im Modal */
-    position: relative;
-}
-
-/* Modal Content Animation wenn sichtbar */
-.modal.show .modal-content,
-.modal[style*="display: block"] .modal-content {
-    transform: scale(1);
-}
-
-/* Modal Header Styles */
-.modal-content h2 {
-    color: var(--accent-primary);
-    margin-bottom: 25px;
-    font-size: 1.5rem;
-    text-align: center;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 15px;
-}
-
-/* Modal Close Button (X) - Optional */
-.modal-close {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 5px;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-}
-
-.modal-close:hover {
-    background: var(--error-color);
-    color: white;
-    transform: rotate(90deg);
-}
-
-/* Input Groups in Modals - Verbessert */
-.modal .input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 25px;
-}
-
-/* Input Fields in Modals - Vollständig gestylt */
-.modal .input-field {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 12px 15px;
-    color: var(--text-primary);
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.modal .input-field:focus {
-    outline: none;
-    border-color: var(--accent-primary);
-    background: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
-    transform: translateY(-1px);
-}
-
-.modal .input-field::placeholder {
-    color: var(--text-muted);
-    opacity: 0.8;
-}
-
-/* Select Fields in Modals - Spezielle Behandlung */
-.modal select.input-field {
-    background: rgba(255, 255, 255, 0.1);
-    cursor: pointer;
-    padding-right: 30px; /* Platz für Dropdown-Pfeil */
-}
-
-.modal select.input-field option {
-    background: var(--primary-bg);
-    color: var(--text-primary);
-    padding: 8px 12px;
-    border: none;
-}
-
-.modal select.input-field option:checked,
-.modal select.input-field option:hover {
-    background: var(--accent-primary);
-    color: var(--primary-bg);
-}
-
-/* Textarea in Modals */
-.modal textarea.input-field {
-    resize: vertical;
-    min-height: 80px;
-    max-height: 200px;
-    font-family: inherit;
-    line-height: 1.5;
-}
-
-/* Color Input in Modals */
-.modal input[type="color"].input-field {
-    height: 45px;
-    padding: 5px;
-    cursor: pointer;
-    border-radius: 8px;
-}
-
-/* Number Input in Modals */
-.modal input[type="number"].input-field {
-    text-align: left;
-}
-
-/* Checkbox und Radio in Modals */
-.modal input[type="checkbox"],
-.modal input[type="radio"] {
-    width: 18px;
-    height: 18px;
-    accent-color: var(--accent-primary);
-    cursor: pointer;
-}
-
-/* Labels in Modals */
-.modal label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    margin: 10px 0;
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-.modal label:hover {
-    color: var(--accent-primary);
-}
-
-/* Button Container in Modals */
-.modal .modal-buttons,
-.modal div[style*="display: flex"] {
-    display: flex;
-    gap: 15px;
-    margin-top: 25px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-/* Buttons in Modals - Erweitert */
-.modal .btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    min-width: 120px;
-    position: relative;
-    overflow: hidden;
-}
-
-.modal .btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s ease;
-}
-
-.modal .btn:hover::before {
-    left: 100%;
-}
-
-.modal .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-}
-
-.modal .btn:active {
-    transform: translateY(0);
-}
-
-/* Modal Button Varianten */
-.modal .btn-success {
-    background: linear-gradient(45deg, var(--success-color), #27ae60);
-    color: white;
-    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
-}
-
-.modal .btn-success:hover {
-    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.5);
-}
-
-.modal .btn-danger {
-    background: linear-gradient(45deg, var(--error-color), #c0392b);
-    color: white;
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-}
-
-.modal .btn-danger:hover {
-    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
-}
-
-.modal .btn-warning {
-    background: linear-gradient(45deg, var(--warning-color), #e67e22);
-    color: white;
-    box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
-}
-
-.modal .btn-warning:hover {
-    box-shadow: 0 6px 20px rgba(243, 156, 18, 0.5);
-}
-
-/* Standard Button (Cancel/Abbrechen) */
-.modal .btn:not(.btn-success):not(.btn-danger):not(.btn-warning) {
-    background: linear-gradient(45deg, var(--text-muted), #7f8c8d);
-    color: white;
-    box-shadow: 0 4px 15px rgba(127, 140, 141, 0.3);
-}
-
-.modal .btn:not(.btn-success):not(.btn-danger):not(.btn-warning):hover {
-    box-shadow: 0 6px 20px rgba(127, 140, 141, 0.5);
-}
-
-/* ===================================================================
-   SPEZIELLE MODAL LAYOUTS & CONTENT
-   ================================================================= */
-
-/* Große Modals für komplexe Formulare */
-.modal-content[style*="max-width: 900px"],
-.modal-content.large {
-    max-width: 900px;
-    width: 98%;
-}
-
-.modal-content.medium {
-    max-width: 700px;
-    width: 95%;
-}
-
-.modal-content.small {
-    max-width: 400px;
-    width: 90%;
-}
-
-/* Material/Item Selection Lists in Modals */
-.modal #itemMaterialList,
-.modal #editItemMaterialList,
-.modal #itemSelectionList,
-.modal #editItemSelectionList,
-.modal #materialSelectionList,
-.modal #editMaterialSelectionList {
-    max-height: 300px;
-    overflow-y: auto;
-    margin-bottom: 20px;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 15px;
-    background: rgba(0, 0, 0, 0.2);
-}
-
-/* Material Assignment in Modals */
-.modal .material-assignment {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    transition: all 0.3s ease;
-}
-
-.modal .material-assignment:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: var(--accent-primary);
-}
-
-.modal .material-name {
-    flex: 1;
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-.modal .material-price {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    min-width: 80px;
-    text-align: right;
-}
-
-.modal .quantity-input {
-    width: 80px;
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    padding: 8px;
-    color: var(--text-primary);
-    text-align: center;
-    font-size: 0.9rem;
-}
-
-.modal .quantity-input:focus {
-    outline: none;
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
-}
-
-.modal .remove-material {
-    background: var(--error-color);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 6px 10px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: all 0.3s ease;
-}
-
-.modal .remove-material:hover {
-    background: #c0392b;
-    transform: scale(1.05);
-}
-
-/* Summary Sections in Modals */
-.modal #saleSummary,
-.modal #editSaleSummary,
-.modal #purchaseSummary,
-.modal #editPurchaseSummary {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 15px;
-    margin: 15px 0 20px 0;
-    border: 1px solid var(--border-color);
-}
-
-.modal .summary-title {
-    color: var(--accent-primary);
-    font-size: 1.1rem;
-    font-weight: bold;
-    margin-bottom: 10px;
-    text-align: center;
-}
-
-.modal .summary-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    padding: 5px 0;
-}
-
-.modal .summary-row.total {
-    border-top: 1px solid var(--border-color);
-    padding-top: 10px;
-    margin-top: 10px;
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-
-.modal .summary-label {
-    color: var(--text-secondary);
-}
-
-.modal .summary-value {
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-.modal .summary-value.total {
-    color: var(--accent-primary);
-    font-size: 1.2rem;
-}
-
-/* Activity Modal spezifische Styles */
-.modal #newActivityIcon,
-.modal #editActivityIcon {
-    text-align: center;
-    font-size: 1.5rem;
-    width: 60px;
-    padding: 8px;
-}
-
-.modal #newActivityColor,
-.modal #editActivityColor {
-    width: 80px;
-    height: 45px;
-    border-radius: 8px;
-    cursor: pointer;
-    border: 2px solid var(--border-color);
-}
-
-.modal #newActivityEquipment,
-.modal #editActivityEquipment {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
-
-/* Participant Hints */
-.modal #participantsHint {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    margin-top: 5px;
-    display: block;
-    text-align: center;
-}
-
-/* Price Preview in Booking Modal */
-.modal #pricePreview {
-    background: rgba(255, 215, 0, 0.1);
-    border: 1px solid var(--accent-primary);
-    border-radius: 8px;
-    padding: 10px;
-    text-align: center;
-    margin: 10px 0;
-    font-weight: bold;
-    font-size: 1.1rem;
-    color: var(--accent-primary);
-}
-
-/* ===================================================================
-   MODAL RESPONSIVE DESIGN
-   ================================================================= */
-
-/* Tablet Responsive */
-@media (max-width: 1024px) {
-    .modal-content {
-        max-width: 90%;
-        padding: 25px;
-    }
-    
-    .modal-content[style*="max-width: 900px"],
-    .modal-content.large {
-        max-width: 95%;
-    }
-    
-    .modal .input-group {
-        gap: 12px;
-    }
-    
-    .modal .btn {
-        padding: 10px 20px;
-        font-size: 0.95rem;
-        min-width: 100px;
-    }
-    
-    /* Material Assignment responsive */
-    .modal .material-assignment {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-        padding: 10px;
-    }
-    
-    .modal .material-price {
-        text-align: left;
-        min-width: auto;
-    }
-    
-    .modal .quantity-input {
-        width: 100px;
-        align-self: center;
-    }
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-    .modal {
-        padding: 10px;
-        align-items: flex-start;
-        padding-top: 20px;
-    }
-    
-    .modal-content {
-        max-width: 95%;
-        width: 95%;
-        padding: 20px;
-        max-height: 95vh;
-        margin: 0;
-    }
-    
-    .modal-content[style*="max-width: 900px"],
-    .modal-content.large,
-    .modal-content.medium {
-        max-width: 95%;
-        width: 95%;
-    }
-    
-    .modal-content h2 {
-        font-size: 1.3rem;
-        margin-bottom: 20px;
-    }
-    
-    .modal .input-group {
-        gap: 10px;
-    }
-    
-    .modal .input-field {
-        padding: 10px 12px;
-        font-size: 0.95rem;
-    }
-    
-    /* Button Layout Mobile */
-    .modal .modal-buttons,
-    .modal div[style*="display: flex"] {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .modal .btn {
-        width: 100%;
-        padding: 12px;
-        font-size: 0.9rem;
-        min-width: auto;
-    }
-    
-    /* Selection Lists Mobile */
-    .modal #itemMaterialList,
-    .modal #editItemMaterialList,
-    .modal #itemSelectionList,
-    .modal #editItemSelectionList,
-    .modal #materialSelectionList,
-    .modal #editMaterialSelectionList {
-        max-height: 200px;
-        padding: 10px;
-    }
-    
-    /* Material Assignment Mobile */
-    .modal .material-assignment {
-        padding: 8px;
-        gap: 6px;
-    }
-    
-    .modal .material-name {
-        font-size: 0.9rem;
-    }
-    
-    .modal .material-price {
-        font-size: 0.8rem;
-    }
-    
-    .modal .quantity-input {
-        width: 80px;
-        padding: 6px;
-        font-size: 0.85rem;
-    }
-    
-    .modal .remove-material {
-        padding: 4px 8px;
-        font-size: 0.75rem;
-    }
-    
-    /* Summary Mobile */
-    .modal #saleSummary,
-    .modal #editSaleSummary,
-    .modal #purchaseSummary,
-    .modal #editPurchaseSummary {
-        padding: 12px;
-        margin: 12px 0;
-    }
-    
-    .modal .summary-row {
-        font-size: 0.9rem;
-    }
-    
-    .modal .summary-row.total {
-        font-size: 1rem;
-    }
-}
-
-/* Ultra Small Mobile */
-@media (max-width: 480px) {
-    .modal {
-        padding: 5px;
-        padding-top: 10px;
-    }
-    
-    .modal-content {
-        max-width: 98%;
-        width: 98%;
-        padding: 15px;
-        border-radius: 15px;
-    }
-    
-    .modal-content h2 {
-        font-size: 1.2rem;
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-    }
-    
-    .modal .input-field {
-        padding: 8px 10px;
-        font-size: 0.9rem;
-    }
-    
-    .modal textarea.input-field {
-        min-height: 60px;
-    }
-    
-    /* Activity Icon Mobile */
-    .modal #newActivityIcon,
-    .modal #editActivityIcon {
-        width: 50px;
-        font-size: 1.2rem;
-        padding: 6px;
-    }
-    
-    .modal #newActivityColor,
-    .modal #editActivityColor {
-        width: 60px;
-        height: 35px;
-    }
-    
-    /* Labels Mobile */
-    .modal label {
-        font-size: 0.85rem;
-        gap: 8px;
-    }
-    
-    /* Price Preview Mobile */
-    .modal #pricePreview {
-        padding: 8px;
-        font-size: 1rem;
-        margin: 8px 0;
-    }
-    
-    /* Selection Lists Ultra Mobile */
-    .modal #itemMaterialList,
-    .modal #editItemMaterialList,
-    .modal #itemSelectionList,
-    .modal #editItemSelectionList,
-    .modal #materialSelectionList,
-    .modal #editMaterialSelectionList {
-        max-height: 150px;
-        padding: 8px;
-    }
-    
-    .modal .material-assignment {
-        padding: 6px;
-        gap: 4px;
-    }
-    
-    .modal .material-name {
-        font-size: 0.85rem;
-    }
-    
-    .modal .material-price {
-        font-size: 0.75rem;
-    }
-    
-    .modal .quantity-input {
-        width: 60px;
-        padding: 4px;
-        font-size: 0.8rem;
-    }
-}
-
-/* ===================================================================
-   MODAL ANIMATIONEN & SPECIAL EFFECTS
-   ================================================================= */
-
-/* Modal Erscheinen Animation */
-@keyframes modalFadeIn {
-    from {
-        opacity: 0;
-        backdrop-filter: blur(0px);
-    }
-    to {
-        opacity: 1;
-        backdrop-filter: blur(5px);
-    }
-}
-
-@keyframes modalContentSlideIn {
-    from {
-        transform: scale(0.7) translateY(-50px);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1) translateY(0);
-        opacity: 1;
-    }
-}
-
-/* Modal Verschwinden Animation */
-@keyframes modalFadeOut {
-    from {
-        opacity: 1;
-        backdrop-filter: blur(5px);
-    }
-    to {
-        opacity: 0;
-        backdrop-filter: blur(0px);
-    }
-}
-
-@keyframes modalContentSlideOut {
-    from {
-        transform: scale(1) translateY(0);
-        opacity: 1;
-    }
-    to {
-        transform: scale(0.7) translateY(-50px);
-        opacity: 0;
-    }
-}
-
-/* Animation Klassen */
-.modal.opening {
-    animation: modalFadeIn 0.3s ease-out forwards;
-}
-
-.modal.opening .modal-content {
-    animation: modalContentSlideIn 0.3s ease-out forwards;
-}
-
-.modal.closing {
-    animation: modalFadeOut 0.3s ease-in forwards;
-}
-
-.modal.closing .modal-content {
-    animation: modalContentSlideOut 0.3s ease-in forwards;
-}
-
-/* Hover Effects für Modal Content */
-.modal-content:hover {
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
-}
-
-/* Input Focus Animations */
-.modal .input-field {
-    position: relative;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.modal .input-field:focus {
-    transform: translateY(-2px);
-}
-
-/* Floating Label Effect */
-.modal .input-group.floating {
-    position: relative;
-}
-
-.modal .input-group.floating .input-field:focus + .floating-label,
-.modal .input-group.floating .input-field:not(:placeholder-shown) + .floating-label {
-    transform: translateY(-25px) scale(0.8);
-    color: var(--accent-primary);
-}
-
-.modal .floating-label {
-    position: absolute;
-    left: 15px;
-    top: 12px;
-    color: var(--text-muted);
-    pointer-events: none;
-    transition: all 0.3s ease;
-    background: var(--card-bg);
-    padding: 0 5px;
-    z-index: 1;
-}
-
-/* Button Ripple Effect */
-.modal .btn {
-    position: relative;
-    overflow: hidden;
-}
-
-.modal .btn::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-}
-
-.modal .btn:active::after {
-    width: 300px;
-    height: 300px;
-}
-
-/* Loading States für Buttons */
-.modal .btn.loading {
-    pointer-events: none;
-    opacity: 0.7;
-    position: relative;
-}
-
-.modal .btn.loading::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 20px;
-    height: 20px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top: 2px solid white;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    transform: translate(-50%, -50%);
-}
-
-@keyframes spin {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-/* Success/Error States für Inputs */
-.modal .input-field.success {
-    border-color: var(--success-color);
-    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
-}
-
-.modal .input-field.error {
-    border-color: var(--error-color);
-    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
-    animation: shake 0.5s ease-in-out;
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-}
-
-/* Validation Messages */
-.modal .validation-message {
-    font-size: 0.8rem;
-    margin-top: 5px;
-    margin-bottom: 10px;
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: all 0.3s ease;
-}
-
-.modal .validation-message.show {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.modal .validation-message.success {
-    color: var(--success-color);
-}
-
-.modal .validation-message.error {
-    color: var(--error-color);
-}
-
-/* Progress Bars für komplexe Modals */
-.modal .progress-bar {
-    width: 100%;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-    overflow: hidden;
-    margin: 15px 0;
-}
-
-.modal .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-    width: 0%;
-    transition: width 0.3s ease;
-    border-radius: 2px;
-}
-
-/* Tooltips für Modal Elements */
-.modal .tooltip {
-    position: relative;
-    cursor: help;
-}
-
-.modal .tooltip::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.9);
-    color: white;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 0.8rem;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-    z-index: 1000;
-}
-
-.modal .tooltip:hover::after {
-    opacity: 1;
-}
-
-/* Dark Mode spezifische Modal Styles */
-@media (prefers-color-scheme: dark) {
-    .modal {
-        background: rgba(0, 0, 0, 0.9);
-    }
-    
-    .modal-content {
-        background: rgba(30, 60, 114, 0.95);
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-    
-    .modal .input-field {
-        background: rgba(0, 0, 0, 0.3);
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-    
-    .modal .material-assignment {
-        background: rgba(0, 0, 0, 0.2);
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-}
-
-/* High Contrast Mode - Korrigiert */
-@media (forced-colors: active) {
-    .modal {
-        background: rgba(0, 0, 0, 0.95);
-    }
-    
-    .modal-content {
-        border: 2px solid var(--accent-primary);
-        background: var(--primary-bg);
-    }
-    
-    .modal .input-field {
-        border: 2px solid var(--text-primary);
-        background: rgba(255, 255, 255, 0.1);
-    }
-    
-    .modal .btn {
-        border: 2px solid currentColor;
-    }
-}
-
-/* Reduced Motion für Accessibility */
-@media (prefers-reduced-motion: reduce) {
-    .modal,
-    .modal-content,
-    .modal .input-field,
-    .modal .btn {
-        transition: none !important;
-        animation: none !important;
-    }
-    
-    .modal .btn::before,
-    .modal .btn::after {
-        display: none !important;
-    }
-    
-    .modal.opening,
-    .modal.closing {
-        animation: none !important;
-    }
-    
-    .modal.opening .modal-content,
-    .modal.closing .modal-content {
-        animation: none !important;
-    }
-}
-
-/* Print Styles für Modals */
-@media print {
-    .modal {
-        display: none !important;
-    }
-}
-
-/* Focus Management für Accessibility */
-.modal .input-field:focus,
-.modal .btn:focus {
-    outline: 2px solid var(--accent-primary);
-    outline-offset: 2px;
-}
-
-/* Keyboard Navigation */
-.modal .btn[tabindex="0"]:focus,
-.modal .input-field[tabindex="0"]:focus {
-    z-index: 1;
-}
-
-/* Special Effects für Premium Feel */
-.modal-content::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
-    opacity: 0.5;
-}
-
-/* Glass Morphism Enhanced */
-.modal-content {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 
-        0 8px 32px 0 rgba(0, 0, 0, 0.37),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-/* Scrollbar für Modal Content */
-.modal-content::-webkit-scrollbar {
-    width: 8px;
-}
-
-.modal-content::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-.modal-content::-webkit-scrollbar-thumb {
-    background: var(--accent-primary);
-    border-radius: 4px;
-}
-
-.modal-content::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-secondary);
-}
-
-/* Material Selection List Scrollbar */
-.modal #itemMaterialList::-webkit-scrollbar,
-.modal #editItemMaterialList::-webkit-scrollbar,
-.modal #itemSelectionList::-webkit-scrollbar,
-.modal #editItemSelectionList::-webkit-scrollbar,
-.modal #materialSelectionList::-webkit-scrollbar,
-.modal #editMaterialSelectionList::-webkit-scrollbar {
-    width: 6px;
-}
-
-.modal #itemMaterialList::-webkit-scrollbar-track,
-.modal #editItemMaterialList::-webkit-scrollbar-track,
-.modal #itemSelectionList::-webkit-scrollbar-track,
-.modal #editItemSelectionList::-webkit-scrollbar-track,
-.modal #materialSelectionList::-webkit-scrollbar-track,
-.modal #editMaterialSelectionList::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 3px;
-}
-
-.modal #itemMaterialList::-webkit-scrollbar-thumb,
-.modal #editItemMaterialList::-webkit-scrollbar-thumb,
-.modal #itemSelectionList::-webkit-scrollbar-thumb,
-.modal #editItemSelectionList::-webkit-scrollbar-thumb,
-.modal #materialSelectionList::-webkit-scrollbar-thumb,
-.modal #editMaterialSelectionList::-webkit-scrollbar-thumb {
-    background: var(--text-muted);
-    border-radius: 3px;
-}
-
-/* ===================================================================
-   MODAL DEBUGGING (Für Entwicklung)
-   ================================================================= */
-
-/* Debug Mode - zeigt alle Modals mit rotem Rahmen */
-.debug-modals .modal {
-    border: 3px solid red !important;
-    background: rgba(255, 0, 0, 0.1) !important;
-}
-
-.debug-modals .modal-content {
-    border: 2px solid blue !important;
-    background: rgba(0, 0, 255, 0.1) !important;
-}
-
-/* Ende der Modal Styles */
