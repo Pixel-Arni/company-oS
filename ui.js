@@ -1,17 +1,70 @@
-// ui.js
+// ui.js - Vollständige UI-Verwaltung für Company OS
 
-// Globale Tab-Funktion
+// ===================================================================
+// UTILITY FUNCTIONS
+// ===================================================================
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('de-DE', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 2
+    }).format(amount || 0);
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('de-DE');
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function createEmptyState(title, subtitle) {
+    return `
+        <div class="empty-state">
+            <h3>${title}</h3>
+            <p>${subtitle}</p>
+        </div>
+    `;
+}
+
+function createListItem(title, details, actions) {
+    return `
+        <div class="list-item">
+            <div class="list-item-info">
+                <h3>${escapeHtml(title)}</h3>
+                ${details.map(detail => `<p>${escapeHtml(detail)}</p>`).join('')}
+            </div>
+            <div class="list-item-actions">
+                ${actions.map(action => 
+                    `<button class="${action.class}" onclick="${action.onclick}">${action.text}</button>`
+                ).join('')}
+            </div>
+        </div>
+    `;
+}
+
+// ===================================================================
+// TAB MANAGEMENT
+// ===================================================================
+
 window.showTab = function(tabId) {
     // Alle Tabs ausblenden
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
     });
-<<<<<<< HEAD
+    
     // Gewählten Tab anzeigen
     const tab = document.getElementById(tabId);
     if(tab) tab.classList.add('active');
+    
     // Menü-Button aktivieren
     document.querySelectorAll('.sidebar-nav button').forEach(btn => btn.classList.remove('active'));
+    
     // Passenden Button setzen
     const mapping = {
         'calculator': 'Waren Übersicht',
@@ -35,6 +88,7 @@ window.showTab = function(tabId) {
         'settings': 'Einstellungen',
         'backup': 'Einstellungen',
     };
+    
     // Seitenmenü Dropdown auf/zu
     document.querySelectorAll('.dropdown').forEach(drop => drop.classList.remove('active'));
     for (let key in mapping) {
@@ -48,11 +102,15 @@ window.showTab = function(tabId) {
             }
         }
     }
+    
     // Display aktualisieren
-    if(window.updateDisplay) window.updateDisplay(tabId);
+    updateDisplay(tabId);
 };
 
-// Globale Notification
+// ===================================================================
+// NOTIFICATIONS
+// ===================================================================
+
 window.showNotification = function(message, type = 'info') {
     let notif = document.getElementById('globalNotification');
     if(!notif) {
@@ -79,22 +137,28 @@ window.showNotification = function(message, type = 'info') {
     setTimeout(() => { notif.style.display = 'none'; }, 2500);
 };
 
-// Modal anzeigen
+// ===================================================================
+// MODAL MANAGEMENT
+// ===================================================================
+
 window.showModal = function(id) {
     const modal = document.getElementById(id);
     if(modal) {
         modal.classList.add('show', 'opening');
         modal.style.display = 'flex';
         setTimeout(() => modal.classList.remove('opening'), 400);
+        
         // Modal-Fokus: erstes Input
         const input = modal.querySelector('input,select,textarea');
         if(input) input.focus();
+        
+        // Close bei Klick auf Hintergrund
+        modal.onclick = function(e) {
+            if(e.target === modal) window.hideModal(id);
+        };
     }
-    // Close bei Klick auf Hintergrund
-    modal.onclick = function(e) {
-        if(e.target === modal) window.hideModal(id);
-    };
 };
+
 window.hideModal = function(id) {
     const modal = document.getElementById(id);
     if(modal) {
@@ -106,11 +170,21 @@ window.hideModal = function(id) {
     }
 };
 
-// Sidebar toggeln (für Mobile)
+// ===================================================================
+// SIDEBAR MANAGEMENT
+// ===================================================================
+
 window.toggleSidebar = function() {
     const sidebar = document.getElementById('sidebar');
-    if(sidebar) sidebar.classList.toggle('mobile-open');
+    const mainContent = document.getElementById('mainContent');
+    if(sidebar) {
+        sidebar.classList.toggle('collapsed');
+        if(mainContent) {
+            mainContent.classList.toggle('expanded');
+        }
+    }
 };
+
 window.toggleDropdown = function(id) {
     document.querySelectorAll('.dropdown').forEach(drop => {
         if(drop.id !== id) drop.classList.remove('active');
@@ -119,8 +193,102 @@ window.toggleDropdown = function(id) {
     if(el) el.classList.toggle('active');
 };
 
-// Anzeige für verschiedene Tabs aktualisieren
+// ===================================================================
+// CALCULATOR DISPLAY (Waren Übersicht)
+// ===================================================================
+
+function updateCalculatorDisplay() {
+    const container = document.getElementById('calculator-content');
+    if (!container) return;
+
+    if (!window.items || window.items.length === 0) {
+        container.innerHTML = createEmptyState('Keine Items vorhanden', 'Fügen Sie zunächst Items und Materialien hinzu!');
+        return;
+    }
+
+    const rows = window.items.map(item => {
+        const materialCosts = getItemMaterialCost(item);
+        const profit = getItemProfit(item);
+        const margin = item.sellPrice > 0 ? ((profit / item.sellPrice) * 100) : 0;
+        
+        return `
+            <tr>
+                <td>${escapeHtml(item.name)}</td>
+                <td>${formatCurrency(item.sellPrice)}</td>
+                <td>${formatCurrency(materialCosts)}</td>
+                <td class="${profit >= 0 ? 'profit-positive' : 'profit-negative'}">${formatCurrency(profit)}</td>
+                <td>${margin.toFixed(1)}%</td>
+            </tr>
+        `;
+    }).join('');
+
+    // Gesamtstatistiken berechnen
+    const totalRevenue = window.items.reduce((sum, item) => sum + (item.sellPrice || 0), 0);
+    const totalCosts = window.items.reduce((sum, item) => sum + getItemMaterialCost(item), 0);
+    const totalProfit = totalRevenue - totalCosts;
+    const avgMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100) : 0;
+
+    container.innerHTML = `
+        <div class="stats-header">
+            <div class="stat-card">
+                <div class="stat-value">${window.items.length}</div>
+                <div class="stat-label">Items</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${formatCurrency(totalRevenue)}</div>
+                <div class="stat-label">Gesamtumsatz</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${formatCurrency(totalCosts)}</div>
+                <div class="stat-label">Materialkosten</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value ${totalProfit >= 0 ? 'profit-positive' : 'profit-negative'}">${formatCurrency(totalProfit)}</div>
+                <div class="stat-label">Gewinn</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${avgMargin.toFixed(1)}%</div>
+                <div class="stat-label">Durchschnittsmarge</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>Kosten-Gewinn-Analyse</h3>
+            <table class="calculator-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Verkaufspreis</th>
+                        <th>Materialkosten</th>
+                        <th>Gewinn</th>
+                        <th>Marge</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+                <tfoot>
+                    <tr>
+                        <td><strong>Gesamt</strong></td>
+                        <td><strong>${formatCurrency(totalRevenue)}</strong></td>
+                        <td><strong>${formatCurrency(totalCosts)}</strong></td>
+                        <td class="${totalProfit >= 0 ? 'profit-positive' : 'profit-negative'}"><strong>${formatCurrency(totalProfit)}</strong></td>
+                        <td><strong>${avgMargin.toFixed(1)}%</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    `;
+}
+
+// ===================================================================
+// DISPLAY UPDATE FUNCTIONS
+// ===================================================================
+
 window.updateDisplay = function(tabId) {
+    // Calculator wird immer aktualisiert
+    if (tabId === 'calculator') {
+        updateCalculatorDisplay();
+    }
+    
     // Tab-abhängige Render-Funktionen
     if(tabId === 'items' && window.renderItemsList) window.renderItemsList();
     if(tabId === 'materials' && window.renderMaterialsList) window.renderMaterialsList();
@@ -139,413 +307,44 @@ window.updateDisplay = function(tabId) {
     if(tabId === 'employees-overview' && window.renderEmployeesOverview) window.renderEmployeesOverview();
     if(tabId === 'employees-management' && window.renderEmployeesManagement) window.renderEmployeesManagement();
     if(tabId === 'time-tracking' && window.renderTimeTracking) window.renderTimeTracking();
-    if(tabId === 'settings' && window.renderSettings) window.renderSettings();
-    if(tabId === 'backup' && window.renderBackup) window.renderBackup();
+    if(tabId === 'backup' && window.renderDataStatus) window.renderDataStatus();
+    
+    // Dropdown-Listen aktualisieren
+    updateAllDropdowns();
 };
 
-// Initialisierung beim Laden der Seite
-document.addEventListener('DOMContentLoaded', function() {
-    // Themes laden (falls vorhanden)
-    if(window.loadTheme) window.loadTheme();
-    // Datenbank initialisieren (falls Funktion vorhanden)
-    if(window.initDatabase) window.initDatabase();
-    // Starttab anzeigen
-    window.showTab('calculator');
-});
-
-console.log('✅ ui.js Basisfunktionen geladen und bereit.');
-=======
-    
-    // Remove active class from all tab buttons
-    document.querySelectorAll('.sidebar-nav button').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Show selected tab
-    const targetTab = document.getElementById(tabName);
-    if (targetTab) {
-        targetTab.style.display = 'block';
-    }
-    
-    // Add active class to clicked button and its parent dropdown
-    const targetButton = document.querySelector(`button[onclick*="showTab('${tabName}')"]`);
-    if (targetButton) {
-        targetButton.classList.add('active');
-        
-        // Wenn der Button in einem Dropdown ist, aktiviere auch den übergeordneten Button und das Dropdown
-        const parentLi = targetButton.closest('li');
-        if (parentLi && parentLi.parentElement && parentLi.parentElement.classList.contains('dropdown')) {
-            const dropdownMenu = parentLi.parentElement;
-            const parentDropdownButton = dropdownMenu.previousElementSibling;
-            
-            // Aktiviere den übergeordneten Button
-            if (parentDropdownButton) {
-                parentDropdownButton.classList.add('active');
-            }
-            
-            // Aktiviere das Dropdown-Menü
-            dropdownMenu.classList.add('active');
-        }
-    }
-    
-    // Update displays based on tab
-    updateTabDisplays(tabName);
-}
-
-function updateTabDisplays(tabName) {
-    switch(tabName) {
-        case 'materials':
-            updateMaterialsDisplay();
-            break;
-        case 'employees':
-            updateEmployeesDisplay();
-            break;
-        case 'customers':
-            updateCustomersDisplay();
-            break;
-        case 'sales':
-            updateSalesDisplay();
-            break;
-        case 'purchases':
-            updatePurchasesDisplay();
-            break;
-        case 'time-bookings':
-            updateTimeBookingsDisplay();
-            break;
-        case 'bilanz':
-            updateBilanzDisplay();
-            break;
-        case 'calculator':
-            updateCalculatorDisplay();
-            break;
-        default:
-            updateDisplay();
-    }
-}
-
 // ===================================================================
-// DISPLAY UPDATE FUNCTIONS
-// ===================================================================
-
-function updateDisplay() {
-    updateItemsDisplay();
-    updateMaterialsDisplay();
-    updateEmployeesDisplay();
-    updateCustomersDisplay();
-    updateSalesDisplay();
-    updatePurchasesDisplay();
-    updateTimeBookingsDisplay();
-    updateCalculatorDisplay();
-    updateAllDropdowns();
-}
-
-function updateItemsDisplay() {
-    const container = document.getElementById('items-list');
-    if (!container || !window.items) return;
-
-    if (items.length === 0) {
-        container.innerHTML = createEmptyState('Keine Items vorhanden', 'Fügen Sie Ihr erstes Item hinzu!');
-        return;
-    }
-
-    container.innerHTML = items.map(item => {
-        const calc = calculateCosts(item);
-        return createListItem(
-            item.name,
-            [
-                `VK: ${formatCurrency(item.sellPrice)}`,
-                `Materialkosten: ${formatCurrency(calc.materialCosts)}`,
-                `Gewinn: ${formatCurrency(calc.profit)} (${calc.profitMargin.toFixed(1)}%)`
-            ],
-            [
-                { text: '✏️ Bearbeiten', onclick: `editItem('${item.id}')`, class: 'btn' },
-                { text: '🗑️ Löschen', onclick: `deleteItem('${item.id}')`, class: 'btn btn-danger' }
-            ]
-        );
-    }).join('');
-}
-
-function updateCalculatorDisplay() {
-    const container = document.getElementById('calculator-content');
-    if (!container || !window.items) return;
-
-    if (items.length === 0) {
-        container.innerHTML = createEmptyState('Keine Items vorhanden', 'Fügen Sie zunächst Items und Materialien hinzu!');
-        return;
-    }
-
-    const rows = items.map(item => {
-        const calc = calculateCosts(item);
-        return `
-            <tr>
-                <td>${escapeHtml(item.name)}</td>
-                <td>${formatCurrency(item.sellPrice)}</td>
-                <td>${formatCurrency(calc.materialCosts)}</td>
-                <td>${formatCurrency(calc.profit)}</td>
-                <td>${calc.profitMargin.toFixed(1)}%</td>
-            </tr>
-        `;
-    }).join('');
-
-    const stats = calculateOverallStats();
-
-    container.innerHTML = `
-        <table class="calculator-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>VK</th>
-                    <th>Material</th>
-                    <th>Gewinn</th>
-                    <th>Marge</th>
-                </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-            <tfoot>
-                <tr>
-                    <td><strong>Summe</strong></td>
-                    <td>${formatCurrency(stats.totalRevenue)}</td>
-                    <td>${formatCurrency(stats.totalCosts)}</td>
-                    <td>${formatCurrency(stats.totalProfit)}</td>
-                    <td>${stats.averageMargin.toFixed(1)}%</td>
-                </tr>
-            </tfoot>
-        </table>`;
-}
-
-function updateMaterialsDisplay() {
-    const container = document.getElementById('materials-list');
-    if (!container || !window.materials) return;
-    
-    if (materials.length === 0) {
-        container.innerHTML = createEmptyState('Keine Materialien vorhanden', 'Fügen Sie Ihr erstes Material hinzu!');
-        return;
-    }
-    
-    container.innerHTML = materials.map(material => {
-        const isLowStock = material.stock <= material.minStock;
-        return createListItem(
-            material.name + (isLowStock ? ' ⚠️' : ''),
-            [
-                `Bestand: ${material.stock} ${material.unit || ''}`,
-                `Mindestbestand: ${material.minStock} ${material.unit || ''}`,
-                `Kosten: ${formatCurrency(material.cost)} / ${material.unit || 'Einheit'}`,
-                `Lieferant: ${material.supplier || 'Nicht angegeben'}`,
-                isLowStock ? '⚠️ Niedriger Bestand!' : ''
-            ].filter(Boolean),
-            [
-                { text: '✏️ Bearbeiten', onclick: `editMaterial('${material.id}')`, class: 'btn' },
-                { text: '🗑️ Löschen', onclick: `deleteMaterial('${material.id}')`, class: 'btn btn-danger' }
-            ]
-        );
-    }).join('');
-}
-
-function updateEmployeesDisplay() {
-    const container = document.getElementById('employees-list');
-    if (!container || !window.employees) return;
-    
-    if (employees.length === 0) {
-        container.innerHTML = createEmptyState('Keine Mitarbeiter vorhanden', 'Fügen Sie Ihren ersten Mitarbeiter hinzu!');
-        return;
-    }
-    
-    container.innerHTML = employees.map(employee => createListItem(
-        `${employee.firstName || ''} ${employee.lastName || ''}`.trim(),
-        [
-            `Position: ${employee.position || 'Nicht angegeben'}`,
-            `Stundenlohn: ${formatCurrency(employee.hourlyRate || 0)}`,
-            employee.email ? `E-Mail: ${employee.email}` : '',
-            employee.phone ? `Telefon: ${employee.phone}` : ''
-        ].filter(Boolean),
-        [
-            { text: '✏️ Bearbeiten', onclick: `editEmployee('${employee.id}')`, class: 'btn' },
-            { text: '🗑️ Löschen', onclick: `deleteEmployee('${employee.id}')`, class: 'btn btn-danger' }
-        ]
-    )).join('');
-}
-
-function updateCustomersDisplay() {
-    const container = document.getElementById('customers-list');
-    if (!container || !window.customers) return;
-    
-    if (customers.length === 0) {
-        container.innerHTML = createEmptyState('Keine Kunden vorhanden', 'Fügen Sie Ihren ersten Kunden hinzu!');
-        return;
-    }
-    
-    container.innerHTML = customers.map(customer => createListItem(
-        `${customer.firstName || ''} ${customer.lastName || ''}`.trim(),
-        [
-            customer.email ? `E-Mail: ${customer.email}` : '',
-            customer.phone ? `Telefon: ${customer.phone}` : '',
-            `Typ: ${customer.type || 'Standard'}`,
-            customer.discount ? `Rabatt: ${customer.discount}%` : ''
-        ].filter(Boolean),
-        [
-            { text: '✏️ Bearbeiten', onclick: `editCustomer('${customer.id}')`, class: 'btn' },
-            { text: '🗑️ Löschen', onclick: `deleteCustomer('${customer.id}')`, class: 'btn btn-danger' }
-        ]
-    )).join('');
-}
-
-function updateSalesDisplay() {
-    const container = document.getElementById('sales-list');
-    if (!container || !window.sales) return;
-    
-    if (sales.length === 0) {
-        container.innerHTML = createEmptyState('Keine Verkäufe vorhanden', 'Erfassen Sie Ihren ersten Verkauf!');
-        return;
-    }
-    
-    container.innerHTML = sales.map(sale => createListItem(
-        `Verkauf vom ${formatDate(sale.date)}`,
-        [
-            `Kunde: ${sale.customerName || 'Unbekannt'}`,
-            `Betrag: ${formatCurrency(sale.totalAmount || 0)}`,
-            `Items: ${sale.items ? sale.items.length : 0}`,
-            sale.notes ? `Notizen: ${sale.notes}` : ''
-        ].filter(Boolean),
-        [
-            { text: '✏️ Bearbeiten', onclick: `editSale('${sale.id}')`, class: 'btn' },
-            { text: '🗑️ Löschen', onclick: `deleteSale('${sale.id}')`, class: 'btn btn-danger' }
-        ]
-    )).join('');
-}
-
-function updatePurchasesDisplay() {
-    const container = document.getElementById('purchases-list');
-    if (!container || !window.materialPurchases) return;
-    
-    if (materialPurchases.length === 0) {
-        container.innerHTML = createEmptyState('Keine Einkäufe vorhanden', 'Erfassen Sie Ihren ersten Einkauf!');
-        return;
-    }
-    
-    container.innerHTML = materialPurchases.map(purchase => createListItem(
-        `Einkauf vom ${formatDate(purchase.date)}`,
-        [
-            `Lieferant: ${purchase.supplier || 'Unbekannt'}`,
-            `Kosten: ${formatCurrency(purchase.totalCost || 0)}`,
-            `Materialien: ${purchase.items ? purchase.items.length : 0}`,
-            purchase.invoice ? `Rechnung: ${purchase.invoice}` : '',
-            purchase.notes ? `Notizen: ${purchase.notes}` : ''
-        ].filter(Boolean),
-        [
-            { text: '✏️ Bearbeiten', onclick: `editPurchase('${purchase.id}')`, class: 'btn' },
-            { text: '🗑️ Löschen', onclick: `deletePurchase('${purchase.id}')`, class: 'btn btn-danger' }
-        ]
-    )).join('');
-}
-
-function updateTimeBookingsDisplay() {
-    const container = document.getElementById('timeBookings-list');
-    if (!container || !window.timeBookings) return;
-    
-    if (timeBookings.length === 0) {
-        container.innerHTML = createEmptyState('Keine Zeitbuchungen vorhanden', 'Erfassen Sie die erste Arbeitszeit!');
-        return;
-    }
-    
-    container.innerHTML = timeBookings.map(booking => createListItem(
-        `${booking.employeeName || 'Unbekannt'} - ${formatDate(booking.date)}`,
-        [
-            `Zeit: ${booking.startTime} - ${booking.endTime}`,
-            `Pause: ${booking.breakMinutes || 0} Minuten`,
-            `Gearbeitet: ${booking.workedHours || 0} Stunden`,
-            `Kosten: ${formatCurrency(booking.totalCost || 0)}`,
-            booking.description ? `Beschreibung: ${booking.description}` : ''
-        ].filter(Boolean),
-        [
-            { text: '✏️ Bearbeiten', onclick: `editTimeBooking('${booking.id}')`, class: 'btn' },
-            { text: '🗑️ Löschen', onclick: `deleteTimeBooking('${booking.id}')`, class: 'btn btn-danger' }
-        ]
-    )).join('');
-}
-
-function updateBilanzDisplay() {
-    // Bilanz calculations
-    const revenue = (window.sales || []).reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
-    const materialCosts = (window.materialPurchases || []).reduce((sum, purchase) => sum + (purchase.totalCost || 0), 0);
-    const laborCosts = (window.timeBookings || []).reduce((sum, booking) => sum + (booking.totalCost || 0), 0);
-    const totalCosts = materialCosts + laborCosts;
-    const profit = revenue - totalCosts;
-    
-    // Update bilanz elements
-    const elements = {
-        'bilanz-revenue': formatCurrency(revenue),
-        'bilanz-costs': formatCurrency(totalCosts),
-        'bilanz-profit': formatCurrency(profit),
-        'bilanz-margin': revenue > 0 ? ((profit / revenue) * 100).toFixed(1) + '%' : '0%'
-    };
-    
-    Object.entries(elements).forEach(([id, value]) => {
-        const element = document.getElementById(id);
-        if (element) element.textContent = value;
-    });
-}
-
-// ===================================================================
-// DROPDOWN UPDATES
+// DROPDOWN MANAGEMENT
 // ===================================================================
 
 function updateAllDropdowns() {
-    updateEmployeeDropdowns();
     updateCustomerDropdowns();
-    updateItemDropdowns();
+    updateEmployeeDropdowns();
+    updateActivityDropdowns();
     updateMaterialDropdowns();
-}
-function toggleDropdown(dropdownId) {
-    const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) return;
-    
-    const isVisible = dropdown.classList.contains('active');
-    
-    // Schließe andere Dropdowns
-    document.querySelectorAll('.dropdown').forEach(dd => {
-        if (dd.id !== dropdownId) {
-            dd.classList.remove('active');
-        }
-    });
-    
-    // Toggle aktives Dropdown
-    if (isVisible) {
-        dropdown.classList.remove('active');
-    } else {
-        dropdown.classList.add('active');
-    }
-}
-function updateEmployeeDropdowns() {
-    const dropdowns = document.querySelectorAll('select[id*="employee"], select[id*="Employee"]');
-    dropdowns.forEach(dropdown => {
-        const currentValue = dropdown.value;
-        dropdown.innerHTML = '<option value="">Mitarbeiter wählen...</option>';
-        
-        if (window.employees) {
-            employees.forEach(emp => {
-                const option = document.createElement('option');
-                option.value = emp.id;
-                option.textContent = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
-                dropdown.appendChild(option);
-            });
-        }
-        
-        dropdown.value = currentValue;
-    });
+    updateItemDropdowns();
 }
 
 function updateCustomerDropdowns() {
-    const dropdowns = document.querySelectorAll('select[id*="customer"], select[id*="Customer"]');
+    const dropdowns = [
+        document.getElementById('newSaleCustomer'),
+        document.getElementById('newBookingCustomer'),
+        document.getElementById('editSaleCustomer'),
+        document.getElementById('editBookingCustomer')
+    ].filter(el => el);
+    
     dropdowns.forEach(dropdown => {
         const currentValue = dropdown.value;
-        dropdown.innerHTML = '<option value="">Kunde wählen...</option>';
+        dropdown.innerHTML = '<option value="">Laufkundschaft</option>';
         
         if (window.customers) {
-            customers.forEach(customer => {
-                const option = document.createElement('option');
-                option.value = customer.id;
-                option.textContent = `${customer.firstName || ''} ${customer.lastName || ''}`.trim();
-                dropdown.appendChild(option);
+            window.customers.forEach(customer => {
+                if (customer.active !== false) {
+                    const option = document.createElement('option');
+                    option.value = `${customer.firstName} ${customer.lastName}`;
+                    option.textContent = `${customer.firstName} ${customer.lastName}`;
+                    dropdown.appendChild(option);
+                }
             });
         }
         
@@ -553,18 +352,48 @@ function updateCustomerDropdowns() {
     });
 }
 
-function updateItemDropdowns() {
-    const dropdowns = document.querySelectorAll('select[id*="item"], select[id*="Item"]');
+function updateEmployeeDropdowns() {
+    const dropdowns = [
+        document.getElementById('newSessionEmployee')
+    ].filter(el => el);
+    
     dropdowns.forEach(dropdown => {
         const currentValue = dropdown.value;
-        dropdown.innerHTML = '<option value="">Item wählen...</option>';
+        dropdown.innerHTML = '<option value="">Mitarbeiter auswählen...</option>';
         
-        if (window.items) {
-            items.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item.id;
-                option.textContent = `${item.name} (${item.quantity || 0} verfügbar)`;
-                dropdown.appendChild(option);
+        if (window.employees) {
+            window.employees.forEach(employee => {
+                if (employee.active !== false) {
+                    const option = document.createElement('option');
+                    option.value = `${employee.firstName} ${employee.lastName}`;
+                    option.textContent = `${employee.firstName} ${employee.lastName}`;
+                    dropdown.appendChild(option);
+                }
+            });
+        }
+        
+        dropdown.value = currentValue;
+    });
+}
+
+function updateActivityDropdowns() {
+    const dropdowns = [
+        document.getElementById('newBookingActivity'),
+        document.getElementById('editBookingActivity')
+    ].filter(el => el);
+    
+    dropdowns.forEach(dropdown => {
+        const currentValue = dropdown.value;
+        dropdown.innerHTML = '<option value="">Aktivität auswählen...</option>';
+        
+        if (window.activities) {
+            window.activities.forEach(activity => {
+                if (activity.active !== false) {
+                    const option = document.createElement('option');
+                    option.value = activity.name;
+                    option.textContent = `${activity.icon || '🎯'} ${activity.name}`;
+                    dropdown.appendChild(option);
+                }
             });
         }
         
@@ -573,16 +402,37 @@ function updateItemDropdowns() {
 }
 
 function updateMaterialDropdowns() {
-    const dropdowns = document.querySelectorAll('select[id*="material"], select[id*="Material"]');
-    dropdowns.forEach(dropdown => {
-        const currentValue = dropdown.value;
-        dropdown.innerHTML = '<option value="">Material wählen...</option>';
+    // Wird von items.js für Material-Auswahl verwendet
+    const selects = document.querySelectorAll('.material-select');
+    selects.forEach(select => {
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">Material wählen...</option>';
         
         if (window.materials) {
-            materials.forEach(material => {
+            window.materials.forEach(material => {
                 const option = document.createElement('option');
-                option.value = material.id;
-                option.textContent = material.name;
+                option.value = material.name;
+                option.textContent = `${material.name} (${formatCurrency(material.price)})`;
+                select.appendChild(option);
+            });
+        }
+        
+        select.value = currentValue;
+    });
+}
+
+function updateItemDropdowns() {
+    // Für Verkauf-Auswahl
+    const dropdowns = document.querySelectorAll('.item-select');
+    dropdowns.forEach(dropdown => {
+        const currentValue = dropdown.value;
+        dropdown.innerHTML = '<option value="">Item auswählen...</option>';
+        
+        if (window.items) {
+            window.items.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.name;
+                option.textContent = `${item.name} (${formatCurrency(item.sellPrice)})`;
                 dropdown.appendChild(option);
             });
         }
@@ -591,60 +441,227 @@ function updateMaterialDropdowns() {
     });
 }
 
+// Duration Dropdown für Zeitbuchungen
+function updateDurationDropdowns() {
+    const dropdowns = [
+        document.getElementById('newBookingDuration'),
+        document.getElementById('editBookingDuration')
+    ].filter(el => el);
+    
+    dropdowns.forEach(dropdown => {
+        const currentValue = dropdown.value;
+        dropdown.innerHTML = `
+            <option value="">Dauer auswählen...</option>
+            <option value="30">30 Minuten</option>
+            <option value="60">60 Minuten</option>
+            <option value="90">90 Minuten</option>
+            <option value="120">120 Minuten</option>
+        `;
+        dropdown.value = currentValue;
+    });
+}
 
 // ===================================================================
-// UPDATE FUNCTIONS FOR OTHER MODULES
+// HELPER FUNCTIONS FÜR BERECHNUNGEN
 // ===================================================================
 
-function updateItemsDisplayUI() { updateItemsDisplay(); }
-function updateMaterialsDisplayUI() { updateMaterialsDisplay(); }
-function updateSalesDisplayUI() { updateSalesDisplayActual(); }
-function updateMaterialPurchasesDisplayUI() { updatePurchasesDisplay(); }
-function updateEmployeeDisplay() { updateEmployeesDisplay(); }
-function updateCustomerDisplay() { updateCustomersDisplay(); }
-function updateTimeBookingDisplay() { updateTimeBookingsDisplay(); }
+// Item-Materialkosten berechnen
+window.getItemMaterialCost = function(item) {
+    if (!item || !item.materials || !window.materials) return 0;
+    let sum = 0;
+    item.materials.forEach(m => {
+        const mat = window.materials.find(mat => mat.name === m.name);
+        if (mat) sum += (mat.price || 0) * (m.qty || 1);
+    });
+    return sum;
+};
+
+// Item-Gewinn berechnen
+window.getItemProfit = function(item) {
+    return (item.sellPrice || 0) - window.getItemMaterialCost(item);
+};
+
+// Verkauf-Gesamtsumme berechnen
+window.calcSaleTotal = function(sale) {
+    if (!sale || !sale.items) return 0;
+    return sale.items.reduce((sum, i) => sum + ((i.price || 0) * (i.qty || 1)), 0);
+};
+
+// ===================================================================
+// MODAL CLOSE FUNCTIONS
+// ===================================================================
+
+window.closeCustomerEditModal = function() {
+    hideModal('editCustomerModal');
+    window._editingCustomerIndex = undefined;
+};
+
+window.closeItemEditModal = function() {
+    hideModal('editItemModal');
+    window._editingItemIndex = undefined;
+};
+
+window.closeMaterialEditModal = function() {
+    hideModal('editMaterialModal');
+    window._editingMaterialIndex = undefined;
+};
+
+window.closeActivityEditModal = function() {
+    hideModal('editActivityModal');
+    window._editingActivityIndex = undefined;
+};
+
+window.closeTimeBookingEditModal = function() {
+    hideModal('editTimeBookingModal');
+    window._editingBookingIndex = undefined;
+};
+
+window.closeEmployeeEditModal = function() {
+    hideModal('editEmployeeModal');
+    window._editingEmployeeIndex = undefined;
+};
+
+window.closeSaleEditModal = function() {
+    hideModal('editSaleModal');
+    window._editingSaleIndex = undefined;
+};
+
+window.closePurchaseEditModal = function() {
+    hideModal('editPurchaseModal');
+    window._editingPurchaseIndex = undefined;
+};
+
+// ===================================================================
+// ADDITIONAL HELPER FUNCTIONS
+// ===================================================================
+
+// Hilfsfunktion für Stundenlohn basierend auf Rang
+window.updateHourlyRateFromRank = function(rank, fieldId) {
+    const rates = {
+        'Aushilfe': 12.00,
+        'Teilzeit': 15.00,
+        'Vollzeit': 18.00,
+        'Senior': 22.00,
+        'Manager': 28.00
+    };
+    const field = document.getElementById(fieldId);
+    if (field && rates[rank]) {
+        field.value = rates[rank];
+    }
+};
+
+// Input-Validierung
+function validateRequired(value, fieldName) {
+    if (!value || value.trim() === '') {
+        showNotification(`${fieldName} ist erforderlich!`, 'error');
+        return false;
+    }
+    return true;
+}
+
+function validateNumber(value, fieldName, min = 0) {
+    const num = parseFloat(value);
+    if (isNaN(num) || num < min) {
+        showNotification(`${fieldName} muss eine gültige Zahl >= ${min} sein!`, 'error');
+        return false;
+    }
+    return true;
+}
+
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+// Date Helpers
+function getCurrentDate() {
+    return new Date().toISOString().slice(0, 10);
+}
+
+function getCurrentTime() {
+    return new Date().toTimeString().slice(0, 5);
+}
 
 // ===================================================================
 // EVENT LISTENERS
 // ===================================================================
 
-function updateSalesDisplay() {
-    updateSalesDisplayActual();
-}
-
-function updateSalesDisplayActual() {
-    const container = document.getElementById('sales-list');
-    if (!container || !window.sales) return;
+function initializeEventListeners() {
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Strg+S zum Speichern
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            if (typeof window.saveData === 'function') {
+                window.saveData();
+                showNotification('Daten gespeichert!', 'success');
+            }
+        }
+        
+        // ESC zum Schließen von Modals
+        if (e.key === 'Escape') {
+            const openModals = document.querySelectorAll('.modal.show');
+            openModals.forEach(modal => {
+                hideModal(modal.id);
+            });
+        }
+        
+        // Alt+Zahl für Tab-Navigation
+        if (e.altKey && !isNaN(e.key)) {
+            e.preventDefault();
+            const tabMapping = {
+                1: 'calculator',
+                2: 'items',
+                3: 'time-bookings',
+                4: 'sales-daily',
+                5: 'material-purchases',
+                6: 'bilanz-daily',
+                7: 'employees-overview',
+                8: 'settings'
+            };
+            if (tabMapping[e.key]) {
+                showTab(tabMapping[e.key]);
+            }
+        }
+    });
     
-    if (sales.length === 0) {
-        container.innerHTML = createEmptyState('Keine Verkäufe vorhanden', 'Erfassen Sie Ihren ersten Verkauf!');
-        return;
+    // Mobile-optimierte Touch-Events
+    let touchStartY = 0;
+    let touchEndY = 0;
+    
+    document.addEventListener('touchstart', function(e) {
+        touchStartY = e.changedTouches[0].screenY;
+    });
+    
+    document.addEventListener('touchend', function(e) {
+        touchEndY = e.changedTouches[0].screenY;
+        handleSwipe();
+    });
+    
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartY - touchEndY;
+        if (Math.abs(diff) > swipeThreshold) {
+            // Swipe-Logik kann hier erweitert werden
+        }
     }
     
-    container.innerHTML = sales.map(sale => createListItem(
-        `Verkauf vom ${formatDate(sale.date)}`,
-        [
-            `Kunde: ${sale.customerName || 'Unbekannt'}`,
-            `Betrag: ${formatCurrency(sale.totalAmount || 0)}`,
-            `Items: ${sale.items ? sale.items.length : 0}`,
-            sale.notes ? `Notizen: ${sale.notes}` : ''
-        ].filter(Boolean),
-        [
-            { text: '✏️ Bearbeiten', onclick: `editSale('${sale.id}')`, class: 'btn' },
-            { text: '🗑️ Löschen', onclick: `deleteSale('${sale.id}')`, class: 'btn btn-danger' }
-        ]
-    )).join('');
-}
-
-// ===================================================================
-// MOBILE SIDEBAR TOGGLE
-// ===================================================================
-
-function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar) {
-        sidebar.classList.toggle('mobile-open');
-    }
+    // Window resize handling
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    
+    // Auto-save bei Formulareingaben
+    let autoSaveTimeout;
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('input-field')) {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                if (typeof window.saveData === 'function') {
+                    window.saveData();
+                }
+            }, 5000);
+        }
+    });
 }
 
 function handleResize() {
@@ -652,34 +669,11 @@ function handleResize() {
     const mainContent = document.querySelector('.main-content');
     
     if (window.innerWidth <= 768) {
-        // Auf mobilen Geräten wird die Sidebar nur angezeigt, wenn mobile-open Klasse vorhanden ist
-        if (mainContent) mainContent.style.marginLeft = '0';
+        if (mainContent) mainContent.classList.add('expanded');
     } else {
-        // Auf Desktop-Geräten wird die Sidebar immer angezeigt
         if (sidebar) sidebar.classList.remove('mobile-open');
-        if (mainContent) mainContent.style.marginLeft = '280px';
+        if (mainContent) mainContent.classList.remove('expanded');
     }
-}
-
-function initializeEventListeners() {
-    window.addEventListener('resize', handleResize);
-    handleResize();
-    
-    document.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-            e.preventDefault();
-            if (typeof saveData === 'function') {
-                saveData();
-                showNotification('Daten gespeichert!', 'success');
-            }
-        }
-        
-        if (e.key === 'Escape') {
-            document.querySelectorAll('[id$="Modal"][style*="display: block"]').forEach(modal => {
-                modal.style.display = 'none';
-            });
-        }
-    });
 }
 
 // ===================================================================
@@ -689,70 +683,51 @@ function initializeEventListeners() {
 function initializeUI() {
     console.log('🎨 Initialisiere UI-System...');
     
+    // Event Listeners initialisieren
     initializeEventListeners();
+    
+    // Defaultwerte setzen
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    dateInputs.forEach(input => {
+        if (!input.value) {
+            input.value = getCurrentDate();
+        }
+    });
+    
+    const timeInputs = document.querySelectorAll('input[type="time"]');
+    timeInputs.forEach(input => {
+        if (!input.value) {
+            input.value = getCurrentTime();
+        }
+    });
+    
+    // Starttab anzeigen
     showTab('calculator');
     
-    // Add CSS
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        .list-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 15px;
-            margin: 10px 0;
-            background: var(--card-bg, rgba(255,255,255,0.1));
-            border: 1px solid var(--border-color, rgba(255,255,255,0.2));
-            border-radius: 8px;
-        }
-        
-        .list-item-info {
-            flex: 1;
-        }
-        
-        .list-item-actions {
-            display: flex;
-            gap: 5px;
-            flex-shrink: 0;
-        }
-        
-        .btn {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            background: var(--accent-primary, #ffd700);
-            color: var(--primary-bg, #1e3c72);
-        }
-        
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .btn:hover {
-            opacity: 0.8;
-        }
-    `;
-    document.head.appendChild(style);
-    
-    console.log('✅ UI-System initialisiert');
+    console.log('✅ UI-System vollständig initialisiert');
 }
 
-// Auto-Initialisierung
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(initializeUI, 1200);
-    });
-} else {
-    setTimeout(initializeUI, 1200);
-}
+// ===================================================================
+// DOCUMENT READY
+// ===================================================================
 
-console.log('🎨 UI.js geladen');
->>>>>>> a781f5447017221b870a5042af495d9502e33727
+document.addEventListener('DOMContentLoaded', function() {
+    // Warten bis alle anderen Module geladen sind
+    setTimeout(() => {
+        // Themes laden (falls vorhanden)
+        if(window.loadTheme) window.loadTheme();
+        
+        // Datenbank initialisieren (falls Funktion vorhanden)
+        if(window.initDatabase) window.initDatabase();
+        
+        // UI initialisieren
+        initializeUI();
+        
+        // Duration Dropdowns füllen
+        updateDurationDropdowns();
+        
+        console.log('🚀 Company OS vollständig geladen und bereit!');
+    }, 100);
+});
+
+console.log('✅ ui.js vollständig geladen');
