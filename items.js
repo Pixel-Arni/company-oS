@@ -100,10 +100,20 @@ window.editItem = function(idx) {
         return;
     }
     
-    document.getElementById('editItemName').value = item.name;
-    document.getElementById('editItemSellPrice').value = item.sellPrice;
-    if (document.getElementById('editItemCraftTime')) {
-        document.getElementById('editItemCraftTime').value = item.craftTime || '';
+    const nameField = document.getElementById('editItemName');
+    const priceField = document.getElementById('editItemSellPrice');
+    const craftTimeField = document.getElementById('editItemCraftTime');
+    
+    if (!nameField || !priceField) {
+        showNotification('Edit-Modal ist nicht verfügbar!', 'error');
+        return;
+    }
+    
+    nameField.value = item.name || '';
+    priceField.value = item.sellPrice || '';
+    
+    if (craftTimeField) {
+        craftTimeField.value = item.craftTime || '';
     }
     
     setItemMaterialsToModal('editItemMaterialList', item.materials || []);
@@ -114,7 +124,7 @@ window.editItem = function(idx) {
 // Item speichern (nach Bearbeitung)
 window.saveItemEdit = function() {
     const idx = window._editingItemIndex;
-    if (idx === undefined) {
+    if (idx === undefined || idx === null) {
         showNotification('Kein Item zum Bearbeiten ausgewählt!', 'error');
         return;
     }
@@ -248,20 +258,32 @@ function setItemMaterialsToModal(listId, materials) {
     }
 }
 
-// Material-Zeile hinzufügen
+// Material-Zeile hinzufügen (SIMPLIFIED VERSION)
 function addMaterialRow(listId, materialName = '', quantity = 1) {
     const container = document.getElementById(listId);
     if (!container) return;
     
     const row = document.createElement('div');
     row.className = 'material-assignment-row';
+    row.style.display = 'flex';
+    row.style.gap = '10px';
+    row.style.alignItems = 'center';
+    row.style.marginBottom = '10px';
+    row.style.padding = '10px';
+    row.style.background = 'rgba(255, 255, 255, 0.05)';
+    row.style.borderRadius = '8px';
+    row.style.border = '1px solid rgba(255, 255, 255, 0.2)';
     
     // Material-Auswahl
     const select = document.createElement('select');
     select.className = 'material-select input-field';
+    select.style.flex = '1';
     select.innerHTML = '<option value="">Material wählen...</option>';
     
-    if (window.materials) {
+    // Materialien laden
+    ensureMaterialsLoaded();
+    
+    if (window.materials && window.materials.length > 0) {
         window.materials.forEach(material => {
             const option = document.createElement('option');
             option.value = material.name;
@@ -280,34 +302,65 @@ function addMaterialRow(listId, materialName = '', quantity = 1) {
     qtyInput.value = quantity;
     qtyInput.min = '0.1';
     qtyInput.step = '0.1';
-    qtyInput.placeholder = 'Menge';
-    
-    // Entfernen-Button
-    const removeBtn = document.createElement('button');
-    removeBtn.type = 'button';
-    removeBtn.className = 'remove-material btn btn-danger';
-    removeBtn.innerHTML = '✖';
-    removeBtn.onclick = function() {
-        row.remove();
-        updateMaterialCostPreview(listId);
-    };
+    qtyInput.style.width = '80px';
+    qtyInput.style.textAlign = 'center';
     
     // Preis-Anzeige
     const priceSpan = document.createElement('span');
     priceSpan.className = 'material-price';
-    updateMaterialPrice(select, qtyInput, priceSpan);
+    priceSpan.style.minWidth = '80px';
+    priceSpan.style.textAlign = 'right';
+    priceSpan.style.fontWeight = 'bold';
     
-    // Event Listener für Preis-Update
-    select.addEventListener('change', () => updateMaterialPrice(select, qtyInput, priceSpan));
-    qtyInput.addEventListener('input', () => updateMaterialPrice(select, qtyInput, priceSpan));
+    // Entfernen-Button
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'remove-material';
+    removeBtn.innerHTML = '✖';
+    removeBtn.style.background = '#e74c3c';
+    removeBtn.style.color = 'white';
+    removeBtn.style.border = 'none';
+    removeBtn.style.borderRadius = '5px';
+    removeBtn.style.padding = '6px 10px';
+    removeBtn.style.cursor = 'pointer';
+    removeBtn.style.fontSize = '0.8rem';
     
+    // Event Listener
+    function updatePrice() {
+        const selectedMaterialName = select.value;
+        const qty = parseFloat(qtyInput.value) || 0;
+        
+        if (selectedMaterialName && window.materials) {
+            const material = window.materials.find(m => m.name === selectedMaterialName);
+            if (material) {
+                const totalPrice = material.price * qty;
+                priceSpan.textContent = formatCurrency(totalPrice);
+                priceSpan.style.color = '#2ecc71';
+            } else {
+                priceSpan.textContent = 'Nicht gefunden';
+                priceSpan.style.color = '#e74c3c';
+            }
+        } else {
+            priceSpan.textContent = formatCurrency(0);
+            priceSpan.style.color = '#888888';
+        }
+    }
+    
+    removeBtn.onclick = function() {
+        row.remove();
+    };
+    
+    select.addEventListener('change', updatePrice);
+    qtyInput.addEventListener('input', updatePrice);
+    
+    // Elemente hinzufügen
     row.appendChild(select);
     row.appendChild(qtyInput);
     row.appendChild(priceSpan);
     row.appendChild(removeBtn);
     
     container.appendChild(row);
-    updateMaterialCostPreview(listId);
+    updatePrice();
 }
 
 // Materialpreis in der Zeile aktualisieren
@@ -331,7 +384,7 @@ function updateMaterialPrice(select, qtyInput, priceSpan) {
     }
 }
 
-// Materialkosten-Vorschau aktualisieren
+// FIXED: Materialkosten-Vorschau ohne Rekursion
 function updateMaterialCostPreview(listId) {
     const materials = getItemMaterialsFromModal(listId);
     let totalCost = 0;
@@ -604,8 +657,29 @@ function saveItems() {
 // INITIALIZATION
 // ===================================================================
 
+// Sicherstellen, dass Materialien korrekt geladen werden
+function ensureMaterialsLoaded() {
+    if (!window.materials || window.materials.length === 0) {
+        console.warn('Keine Materialien gefunden. Erstelle Fallback-Materialien...');
+        // Fallback: Beispiel-Materialien erstellen
+        window.materials = [
+            { name: 'Holz', price: 10.00 },
+            { name: 'Metall', price: 15.00 },
+            { name: 'Kunststoff', price: 5.00 },
+            { name: 'Glas', price: 8.00 },
+            { name: 'Stoff', price: 12.00 },
+            { name: 'Leder', price: 20.00 }
+        ];
+        localStorage.setItem('company-os-materials', JSON.stringify(window.materials));
+        console.log('✅ Fallback-Materialien erstellt:', window.materials);
+    }
+}
+
 // Items beim Laden der Seite initialisieren
 function initializeItems() {
+    // Materialien laden
+    ensureMaterialsLoaded();
+    
     // Default-Items hinzufügen falls leer
     if (!window.items || window.items.length === 0) {
         window.items = [
@@ -627,9 +701,108 @@ function initializeItems() {
     console.log(`✅ Items initialisiert - ${window.items.length} Items geladen`);
 }
 
+// ===================================================================
+// MODAL CLOSE FUNCTIONS
+// ===================================================================
+
+window.closeItemEditModal = function() {
+    hideModal('editItemModal');
+    window._editingItemIndex = undefined;
+};
+
+window.closeMaterialEditModal = function() {
+    hideModal('editMaterialModal');
+    window._editingMaterialIndex = undefined;
+};
+
+// ===================================================================
+// MATERIAL EDIT FUNCTIONS
+// ===================================================================
+
+window.editMaterial = function(idx) {
+    const material = window.materials[idx];
+    if (!material) {
+        showNotification('Material nicht gefunden!', 'error');
+        return;
+    }
+    
+    const nameField = document.getElementById('editMaterialName');
+    const priceField = document.getElementById('editMaterialPrice');
+    
+    if (!nameField || !priceField) {
+        showNotification('Edit-Modal ist nicht verfügbar!', 'error');
+        return;
+    }
+    
+    nameField.value = material.name || '';
+    priceField.value = material.price || '';
+    
+    window._editingMaterialIndex = idx;
+    showModal('editMaterialModal');
+};
+
+window.saveMaterialEdit = function() {
+    const idx = window._editingMaterialIndex;
+    if (idx === undefined || idx === null) {
+        showNotification('Kein Material zum Bearbeiten ausgewählt!', 'error');
+        return;
+    }
+    
+    const name = document.getElementById('editMaterialName').value.trim();
+    const price = parseFloat(document.getElementById('editMaterialPrice').value);
+    
+    if (!name || name.length < 2) {
+        showNotification('Material-Name muss mindestens 2 Zeichen lang sein!', 'error');
+        return;
+    }
+    
+    if (isNaN(price) || price < 0) {
+        showNotification('Bitte geben Sie einen gültigen Preis ein!', 'error');
+        return;
+    }
+    
+    if (window.materials.some((material, i) => i !== idx && material.name.toLowerCase() === name.toLowerCase())) {
+        showNotification('Ein Material mit diesem Namen existiert bereits!', 'warning');
+        return;
+    }
+    
+    const oldName = window.materials[idx].name;
+    window.materials[idx] = {
+        name,
+        price,
+        updatedAt: new Date().toISOString()
+    };
+    
+    localStorage.setItem('company-os-materials', JSON.stringify(window.materials));
+    if (typeof window.saveData === 'function') {
+        window.saveData();
+    }
+    
+    if (window.renderMaterialsList) {
+        window.renderMaterialsList();
+    }
+    
+    hideModal('editMaterialModal');
+    showNotification(`Material "${oldName}" wurde aktualisiert!`, 'success');
+};
+
+// ===================================================================
+// EVENT LISTENERS
+// ===================================================================
+
 // Event Listeners beim Laden der Seite
 document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(initializeItems, 200); // Warten bis andere Module geladen sind
+    setTimeout(initializeItems, 200);
 });
 
-console.log('✅ items.js vollständig geladen');
+// ESC-Taste für Modal schließen
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const openModals = document.querySelectorAll('.modal.show');
+        openModals.forEach(modal => {
+            hideModal(modal.id);
+        });
+    }
+});
+
+console.log('✅ items.js vollständig geladen - korrigierte Version');
