@@ -273,15 +273,247 @@
         </div>
 
         <!-- Sales Overview Tab -->
-        <div class="tab-content" id="sales-overview">
-            <div class="tab-header">
-                <h1>📊 Verkaufsübersicht</h1>
-                <p>Übersicht aller Verkäufe mit Statistiken</p>
-            </div>
-            <div id="sales-overview-content">
-                <!-- Sales overview wird von ui.js gefüllt -->
-            </div>
+<!-- Sales Daily Tab - Verbesserte Kassen-Funktionalität -->
+<div class="tab-content" id="sales-daily">
+    <div class="tab-header">
+        <h1>💰 Tagesverkauf</h1>
+        <p>Verkäufe erfassen und verwalten - Kassen-System</p>
+    </div>
+    
+    <!-- Neuer Verkauf - Kassen-Interface -->
+    <div class="card">
+        <h3>🛒 Neue Kassen-Transaktion</h3>
+        
+        <!-- Kunden- und Verkaufsdaten -->
+        <div class="input-group">
+            <select id="newSaleCustomer" class="input-field">
+                <option value="">Laufkundschaft</option>
+                <!-- Wird dynamisch von customers.js gefüllt -->
+            </select>
+            <input type="date" id="newSaleDate" class="input-field">
+            <select id="newSaleType" class="input-field">
+                <option value="regular">Regulärer Verkauf</option>
+                <option value="bulk">Großbestellung</option>
+                <option value="special">Sonderverkauf</option>
+                <option value="discount">Rabatt-Verkauf</option>
+            </select>
+            <textarea id="newSaleNotes" class="input-field" placeholder="Notizen (optional)" rows="2"></textarea>
         </div>
+        
+        <!-- Verfügbare Items (Kassen-Grid) -->
+        <h4>🏪 Verfügbare Items:</h4>
+        <div id="itemSelectionList">
+            <!-- Wird von sales.js mit renderAvailableItems() gefüllt -->
+        </div>
+        
+        <!-- Aktueller Warenkorb / Verkaufsvorschau -->
+        <h4>🛒 Aktueller Warenkorb:</h4>
+        <div id="saleSummary">
+            <!-- Wird von sales.js mit updateSalePreview() gefüllt -->
+        </div>
+        
+        <!-- Verkaufs-Aktionen -->
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 20px;">
+            <button class="btn btn-success" onclick="addSale()">💰 Verkauf abschließen</button>
+            <button class="btn btn-warning" onclick="clearCurrentSale()">🗑️ Warenkorb leeren</button>
+            <button class="btn" onclick="quickAddCustomItem()">➕ Eigener Artikel</button>
+        </div>
+    </div>
+    
+    <!-- Heutige Verkäufe -->
+    <div class="card">
+        <h3>📅 Heutige Verkäufe</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div>
+                <span id="todaysSalesCount">0</span> Verkäufe heute
+            </div>
+            <div>
+                Tagesumsatz: <strong id="todaysRevenue">€0,00</strong>
+            </div>
+            <button class="btn" onclick="exportDailySales()">📊 Export</button>
+        </div>
+        <div id="sales-daily-list">
+            <!-- Sales liste wird von sales.js gefüllt -->
+        </div>
+    </div>
+</div>
+
+<!-- Sales Overview Tab - Erweiterte Übersicht -->
+<div class="tab-content" id="sales-overview">
+    <div class="tab-header">
+        <h1>📊 Verkaufsübersicht</h1>
+        <p>Detaillierte Analyse aller Verkäufe mit Statistiken</p>
+    </div>
+    
+    <!-- Filter und Suchoptionen -->
+    <div class="card">
+        <h3>🔍 Filter & Analyse</h3>
+        <div class="input-group">
+            <input type="text" id="salesSearch" class="input-field" placeholder="Nach Kunde oder Notizen suchen..." oninput="filterSales()">
+            <select id="salesDateFilter" class="input-field" onchange="filterSales()">
+                <option value="all">Alle Zeiträume</option>
+                <option value="today">Heute</option>
+                <option value="week">Diese Woche</option>
+                <option value="month">Dieser Monat</option>
+                <option value="quarter">Dieses Quartal</option>
+                <option value="year">Dieses Jahr</option>
+            </select>
+            <select id="salesTypeFilter" class="input-field" onchange="filterSales()">
+                <option value="">Alle Verkaufstypen</option>
+                <option value="regular">Regulär</option>
+                <option value="bulk">Großbestellung</option>
+                <option value="special">Sonderverkauf</option>
+                <option value="discount">Rabatt</option>
+            </select>
+            <select id="salesStatusFilter" class="input-field" onchange="filterSales()">
+                <option value="">Alle Status</option>
+                <option value="paid">Nur bezahlte</option>
+                <option value="unpaid">Nur unbezahlte</option>
+            </select>
+            <button class="btn" onclick="exportFilteredSales()">📈 Export</button>
+        </div>
+    </div>
+    
+    <!-- Verkaufsübersicht Content -->
+    <div id="sales-overview-content">
+        <!-- Sales overview wird von sales.js gefüllt -->
+    </div>
+    
+    <!-- Top-Seller Analyse -->
+    <div class="card">
+        <h3>🏆 Top-Seller Analyse</h3>
+        <div id="top-sellers-analysis">
+            <!-- Wird von sales.js gefüllt -->
+        </div>
+    </div>
+</div>
+
+<!-- Script-Ergänzung für zusätzliche Funktionen -->
+<script>
+// Warenkorb leeren
+window.clearCurrentSale = function() {
+    if (!window.currentSaleItems || window.currentSaleItems.length === 0) {
+        showNotification('Warenkorb ist bereits leer!', 'info');
+        return;
+    }
+    
+    if (confirm('Warenkorb wirklich leeren?')) {
+        window.currentSaleItems = [];
+        if (window.updateSalePreview) window.updateSalePreview();
+        showNotification('Warenkorb wurde geleert!', 'success');
+    }
+};
+
+// Eigenen Artikel hinzufügen (Quick Add)
+window.quickAddCustomItem = function() {
+    const name = prompt('Artikelname:');
+    if (!name) return;
+    
+    const priceStr = prompt('Preis (€):');
+    const price = parseFloat(priceStr);
+    
+    if (isNaN(price) || price <= 0) {
+        showNotification('Ungültiger Preis!', 'error');
+        return;
+    }
+    
+    if (window.addItemToSale) {
+        window.addItemToSale(name, price);
+    }
+};
+
+// Tägliche Verkäufe exportieren
+window.exportDailySales = function() {
+    const today = new Date().toISOString().slice(0,10);
+    const todaysSales = (window.sales || []).filter(s => s.date === today);
+    
+    if (todaysSales.length === 0) {
+        showNotification('Keine Verkäufe für heute gefunden!', 'warning');
+        return;
+    }
+    
+    let csv = 'Zeit,Kunde,Typ,Items,Gesamt,Status,Notizen\n';
+    todaysSales.forEach(sale => {
+        const total = window.calcSaleTotal ? window.calcSaleTotal(sale) : 0;
+        const items = (sale.items || []).map(i => `${i.name} (${i.qty}x)`).join('; ');
+        csv += `"${sale.createdAt || sale.date}","${sale.customerName || 'Laufkundschaft'}","${sale.type}","${items}",${total.toFixed(2)},"${sale.paid ? 'Bezahlt' : 'Offen'}","${sale.notes || ''}"\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tagesverkauf_${today}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 200);
+    
+    showNotification('Tagesverkauf exportiert!', 'success');
+};
+
+// Gefilterte Verkäufe exportieren
+window.exportFilteredSales = function() {
+    if (!window.sales || window.sales.length === 0) {
+        showNotification('Keine Verkäufe zum Exportieren!', 'warning');
+        return;
+    }
+    
+    let csv = 'Datum,Kunde,Typ,Items,Gesamt,Status,Notizen\n';
+    window.sales.forEach(sale => {
+        const total = window.calcSaleTotal ? window.calcSaleTotal(sale) : 0;
+        const items = (sale.items || []).map(i => `${i.name} (${i.qty}x)`).join('; ');
+        csv += `"${sale.date}","${sale.customerName || 'Laufkundschaft'}","${sale.type}","${items}",${total.toFixed(2)},"${sale.paid ? 'Bezahlt' : 'Offen'}","${sale.notes || ''}"\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `verkauefe_export_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 200);
+    
+    showNotification('Verkäufe exportiert!', 'success');
+};
+
+// Sales Filter (Placeholder - kann erweitert werden)
+window.filterSales = function() {
+    console.log('Sales Filter wird angewendet...');
+    // Implementierung kann später hinzugefügt werden
+};
+
+// Tagesstatistiken aktualisieren
+function updateDailyStats() {
+    if (!window.sales) return;
+    
+    const today = new Date().toISOString().slice(0,10);
+    const todaysSales = window.sales.filter(s => s.date === today);
+    const todaysRevenue = todaysSales.reduce((sum, sale) => {
+        return sum + (window.calcSaleTotal ? window.calcSaleTotal(sale) : 0);
+    }, 0);
+    
+    const countEl = document.getElementById('todaysSalesCount');
+    const revenueEl = document.getElementById('todaysRevenue');
+    
+    if (countEl) countEl.textContent = todaysSales.length;
+    if (revenueEl) revenueEl.textContent = new Intl.NumberFormat('de-DE', {
+        style: 'currency',
+        currency: 'EUR'
+    }).format(todaysRevenue);
+}
+
+// Event Listener für Tagesstatistiken
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(updateDailyStats, 500);
+});
+</script>
 
         <!-- Material Purchases Tab -->
         <div class="tab-content" id="material-purchases">

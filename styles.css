@@ -932,3 +932,662 @@ select.input-field option {
         min-height: 60px;
     }
 }
+
+/* ===================================================================
+   SALES / KASSEN-SPEZIFISCHE STYLES
+   ================================================================= */
+
+/* Items Grid für Kassen-Oberfläche */
+.items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.item-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    position: relative;
+}
+
+.item-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+}
+
+.item-card .item-info {
+    margin-bottom: 12px;
+}
+
+.item-card .item-info h4 {
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+.item-card .item-price {
+    color: var(--accent-primary);
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.item-card .item-profit {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.item-add-btn {
+    width: 100%;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+/* Sales Summary / Warenkorb */
+#saleSummary {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.summary-empty {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 40px 20px;
+}
+
+.summary-empty p {
+    margin-bottom: 10px;
+}
+
+.summary-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.summary-header h4 {
+    color: var(--accent-primary);
+    margin: 0;
+}
+
+.summary-items {
+    margin-bottom: 20px;
+}
+
+.summary-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 15px;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.summary-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent-primary);
+}
+
+.summary-item .item-details {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.summary-item .item-name {
+    font-weight: bold;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.summary-item .item-unit-price {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.summary-item .item-quantity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.qty-btn {
+    background: var(--accent-primary);
+    color: var(--primary-bg);
+    border: none;
+    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qty-btn:hover:not(:disabled) {
+    background: var(--accent-secondary);
+    transform: scale(1.1);
+}
+
+.qty-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.qty-display {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 12px;
+    min-width: 40px;
+    text-align: center;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.summary-item .item-total {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    color: var(--accent-primary);
+}
+
+.remove-item-btn {
+    background: var(--error-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-item-btn:hover {
+    background: #c0392b;
+    transform: scale(1.1);
+}
+
+.summary-total {
+    border-top: 2px solid var(--border-color);
+    padding-top: 15px;
+    margin-top: 15px;
+}
+
+.total-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.3rem;
+    color: var(--accent-primary);
+}
+
+.total-line strong {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Item Assignment Rows (für Edit-Modal) */
+.item-assignment-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 15px;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.item-assignment-row:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent-primary);
+}
+
+.item-assignment-row .item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.item-assignment-row .item-name {
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.item-assignment-row .item-unit-price {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.item-assignment-row .item-quantity {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.item-assignment-row .quantity-input {
+    width: 80px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px;
+    color: var(--text-primary);
+    text-align: center;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.item-assignment-row .quantity-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+}
+
+.item-assignment-row .item-total {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.item-assignment-row .item-total-price {
+    font-weight: bold;
+    color: var(--accent-primary);
+    min-width: 80px;
+    text-align: right;
+}
+
+.item-assignment-row .remove-item {
+    background: var(--error-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.item-assignment-row .remove-item:hover {
+    background: #c0392b;
+    transform: scale(1.1);
+}
+
+/* Edit Sales Summary */
+#editSaleSummary {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.summary-title {
+    color: var(--accent-primary);
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 5px 0;
+}
+
+.summary-row.total {
+    border-top: 1px solid var(--border-color);
+    padding-top: 10px;
+    margin-top: 15px;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.summary-label {
+    color: var(--text-secondary);
+}
+
+.summary-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.summary-value.total {
+    color: var(--accent-primary);
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* Sales Stats Header */
+.stats-header {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Profit/Loss Indicators */
+.profit-positive {
+    color: var(--success-color);
+    font-weight: bold;
+}
+
+.profit-negative {
+    color: var(--error-color);
+    font-weight: bold;
+}
+
+/* Sales List Items */
+.sales-list-item {
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px var(--shadow-color);
+    transition: all 0.3s ease;
+}
+
+.sales-list-item:hover {
+    border: 1px solid var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+/* ===================================================================
+   MOBILE RESPONSIVE - SALES
+   ================================================================= */
+@media (max-width: 768px) {
+    .items-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+    }
+    
+    .item-card {
+        padding: 12px;
+    }
+    
+    .item-card .item-price {
+        font-size: 1.1rem;
+    }
+    
+    .summary-item {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .summary-item .item-quantity {
+        justify-content: center;
+    }
+    
+    .summary-item .item-total {
+        justify-content: center;
+    }
+    
+    .item-assignment-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .item-assignment-row .item-total {
+        justify-content: center;
+    }
+    
+    .stats-header {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+    }
+    
+    .stat-card {
+        padding: 12px;
+    }
+    
+    .stat-value {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .items-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .item-card {
+        padding: 10px;
+    }
+    
+    .summary-item {
+        padding: 10px;
+    }
+    
+    .qty-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+    
+    .qty-display {
+        padding: 8px 12px;
+        font-size: 1rem;
+    }
+    
+    .total-line {
+        font-size: 1.1rem;
+    }
+    
+    .total-line strong {
+        font-size: 1.3rem;
+    }
+}
+
+/* ===================================================================
+   KASSEN-SPEZIFISCHE ANIMATIONEN
+   ================================================================= */
+
+/* Hinzufügen-Animation */
+@keyframes addToCart {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.item-card.adding {
+    animation: addToCart 0.3s ease;
+}
+
+/* Entfernen-Animation */
+@keyframes removeFromCart {
+    0% { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(100px); }
+}
+
+.summary-item.removing {
+    animation: removeFromCart 0.3s ease;
+}
+
+/* Laden-Animation für leere States */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+    opacity: 0;
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===================================================================
+   SALES MODAL IMPROVEMENTS
+   ================================================================= */
+
+/* Edit Sales Modal spezifische Styles */
+.modal#editSaleModal .modal-content {
+    max-width: 900px;
+    width: 95%;
+}
+
+.modal#editSaleModal .input-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.modal#editSaleModal label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    margin: 10px 0;
+    cursor: pointer;
+}
+
+.modal#editSaleModal input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-primary);
+    cursor: pointer;
+}
+
+/* Edit Item Selection List */
+#editItemSelectionList {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+}
+
+#editItemSelectionList::-webkit-scrollbar {
+    width: 8px;
+}
+
+#editItemSelectionList::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+#editItemSelectionList::-webkit-scrollbar-thumb {
+    background: var(--accent-primary);
+    border-radius: 4px;
+}
+
+#editItemSelectionList::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-secondary);
+}
+
+/* Print-Styles für Verkaufsbelege */
+@media print {
+    .sales-receipt {
+        background: white !important;
+        color: black !important;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        line-height: 1.4;
+        max-width: 300px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .sales-receipt .receipt-header {
+        text-align: center;
+        border-bottom: 1px dashed black;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .sales-receipt .receipt-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+    
+    .sales-receipt .receipt-total {
+        border-top: 1px dashed black;
+        padding-top: 10px;
+        margin-top: 15px;
+        font-weight: bold;
+        text-align: right;
+    }
+}
